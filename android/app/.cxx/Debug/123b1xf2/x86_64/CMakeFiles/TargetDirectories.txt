@@ -1,0 +1,2 @@
+C:/Users/azizc/AndroidStudioProjects/Nouveau dossier/maheraziz_ecotrack/android/app/.cxx/Debug/123b1xf2/x86_64/CMakeFiles/edit_cache.dir
+C:/Users/azizc/AndroidStudioProjects/Nouveau dossier/maheraziz_ecotrack/android/app/.cxx/Debug/123b1xf2/x86_64/CMakeFiles/rebuild_cache.dir
