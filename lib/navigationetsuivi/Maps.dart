@@ -4,11 +4,13 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http; // Importation du package http
+import 'data/tracer_itinéraire.dart';
 import 'dart:convert'; // Pour utiliser json.decode
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'DangerPage.dart';
 import 'dart:async'; // Ajoutez cette ligne
+import 'dart:math'; // For min/max functions
 import '../chat/chat_list_screen.dart';
 import '../chat/chat_screen.dart';
 import 'alerts/alert_models.dart';
@@ -629,40 +631,82 @@ class _MapsPageState extends State<MapsPage> {
     }
   }
 
-//  Fonction pour rechercher une adresse et l'afficher sur la carte
+  // Fonction pour rechercher une adresse et l'afficher sur la carte
   Future<void> _searchLocation() async {
     String searchText = _searchController.text.trim();
-    if (searchText.isEmpty) return;
+    if (searchText.isEmpty) {
+      _showSnackBar("Veuillez entrer un lieu à rechercher");
+      return;
+    }
 
     try {
+      // Afficher un indicateur de chargement
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
       List<Location> locations = await locationFromAddress(searchText);
 
-      if (locations.isNotEmpty) {
-        Location location = locations.first;
-        LatLng searchPosition = LatLng(location.latitude, location.longitude);
+      // Fermer l'indicateur de chargement
+      Navigator.of(context).pop();
 
-        setState(() {
-          _markers.add(
-            Marker(
-              markerId: MarkerId(searchText),
-              position: searchPosition,
-              infoWindow: InfoWindow(title: searchText),
-              icon: BitmapDescriptor.defaultMarkerWithHue(
-                  BitmapDescriptor.hueRed),
+      if (locations.isEmpty) {
+        _showSnackBar("Aucun résultat trouvé pour '$searchText'");
+        return;
+      }
+
+      Location location = locations.first;
+      LatLng searchPosition = LatLng(location.latitude, location.longitude);
+
+      setState(() {
+        // Supprimer l'ancien marqueur de recherche s'il existe
+        _markers.removeWhere((marker) => marker.markerId.value == "search_result");
+        
+        // Ajouter le nouveau marqueur
+        _markers.add(
+          Marker(
+            markerId: const MarkerId("search_result"),
+            position: searchPosition,
+            infoWindow: InfoWindow(
+              title: searchText,
+              snippet: "Destination recherchée",
             ),
-          );
-        });
-
-        mapController?.animateCamera(
-          CameraUpdate.newCameraPosition(
-            CameraPosition(target: searchPosition, zoom: 14.0),
+            icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
           ),
         );
-      } else {
-        _showSnackBar("Lieu introuvable !");
-      }
+
+        // Définir comme destination
+        _destination = searchPosition;
+        _distanceRemaining = _currentPosition != null 
+            ? Geolocator.distanceBetween(
+                _currentPosition!.latitude,
+                _currentPosition!.longitude,
+                searchPosition.latitude,
+                searchPosition.longitude,
+              ) / 1000
+            : null;
+      });
+
+      // Centrer la carte sur le résultat
+      mapController?.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(target: searchPosition, zoom: 14.0),
+        ),
+      );
+
+      // Afficher les détails de la destination
+      _showDestinationDetails(context);
     } catch (e) {
+      // Fermer l'indicateur de chargement en cas d'erreur
+      if (Navigator.canPop(context)) {
+        Navigator.of(context).pop();
+      }
       _showSnackBar("Erreur lors de la recherche : ${e.toString()}");
+      debugPrint("Search error: $e");
     }
   }
 
@@ -783,42 +827,108 @@ class _MapsPageState extends State<MapsPage> {
     );
   }
 
-  //Fonction pour tracer un itinéraire entre la position actuelle et la destination
+  // Fonction pour tracer un itinéraire entre la position actuelle et la destination
   Future<void> _drawRoute() async {
-    if (_currentPosition == null || _destination == null) {
-      _showSnackBar(
-          "Veuillez sélectionner une destination et activer la localisation.");
+    if (_currentPosition == null) {
+      _showSnackBar("Veuillez activer la localisation pour tracer un itinéraire.");
+      return;
+    }
+    
+    if (_destination == null) {
+      _showSnackBar("Veuillez d'abord sélectionner une destination en cliquant sur la carte.");
       return;
     }
 
-    const apiKey =
-        'AIzaSyDaH6YTETPcQMnNjAFptWwSnjVs_oF31Y0'; // Remplacez par votre clé API Google Directions
-    final url =
-        'https://maps.googleapis.com/maps/api/directions/json?origin=${_currentPosition!.latitude},${_currentPosition!.longitude}&destination=${_destination!.latitude},${_destination!.longitude}&key=$apiKey';
+    try {
+      setState(() {
+        _polylines.clear(); // Effacer les itinéraires précédents
+      });
 
-    final response = await http.get(Uri.parse(url));
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      if (data['status'] == 'OK') {
-        List<LatLng> points =
-            _decodePolyline(data['routes'][0]['overview_polyline']['points']);
-        setState(() {
-          _polylines.clear(); // Efface les anciennes polylines
-          _polylines.add(
-            Polyline(
-              polylineId: const PolylineId("route"),
-              points: points,
-              color: Colors.blue,
-              width: 5,
-            ),
-          );
-        });
-      } else {
-        _showSnackBar("Erreur de l'API Directions: ${data['status']}");
+      // Afficher un indicateur de chargement
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      await TracerItineraire.drawRoute(
+        origin: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
+        destination: _destination!,
+        addPolyline: (polyline) {
+          setState(() {
+            _polylines.add(polyline);
+          });
+        },
+        googleApiKey: 'AIzaSyDaH6YTETPcQMnNjAFptWwSnjVs_oF31Y0',
+      );
+      
+      // Zoom pour afficher l'itinéraire complet
+      if (mapController != null) {
+        final bounds = LatLngBounds(
+          southwest: LatLng(
+            min(_currentPosition!.latitude, _destination!.latitude),
+            min(_currentPosition!.longitude, _destination!.longitude),
+          ),
+          northeast: LatLng(
+            max(_currentPosition!.latitude, _destination!.latitude),
+            max(_currentPosition!.longitude, _destination!.longitude),
+          ),
+        );
+        mapController!.animateCamera(CameraUpdate.newLatLngBounds(bounds, 100));
       }
-    } else {
-      _showSnackBar("Erreur HTTP: ${response.statusCode}");
+
+      // Fermer l'indicateur de chargement
+      Navigator.of(context).pop();
+
+      // Afficher les informations de l'itinéraire
+      _showRouteInfo();
+    } catch (e) {
+      // Fermer l'indicateur de chargement en cas d'erreur
+      if (Navigator.canPop(context)) {
+        Navigator.of(context).pop();
+      }
+      
+      _showSnackBar("Erreur lors du tracé de l'itinéraire: ${e.toString()}");
+      debugPrint("Route drawing error: $e");
     }
+  }
+
+  // Afficher les informations de l'itinéraire (distance et durée estimée)
+  void _showRouteInfo() {
+    if (_currentPosition == null || _destination == null) return;
+
+    final distance = Geolocator.distanceBetween(
+      _currentPosition!.latitude,
+      _currentPosition!.longitude,
+      _destination!.latitude,
+      _destination!.longitude,
+    ) / 1000; // Convertir en kilomètres
+
+    // Estimation de la durée (en minutes) - 5 min par km en voiture
+    final estimatedDuration = (distance * 5).toInt();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Informations de l'itinéraire"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Distance: ${distance.toStringAsFixed(1)} km"),
+            Text("Durée estimée: $estimatedDuration minutes"),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text("OK"),
+          ),
+        ],
+      ),
+    );
   }
 
   // Décodage d'une polyligne en liste de coordonnées
@@ -976,6 +1086,11 @@ class _MapsPageState extends State<MapsPage> {
                   IconButton(
                     icon: const Icon(Icons.my_location, color: Colors.black),
                     onPressed: _getCurrentLocation,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.directions, color: Colors.black),
+                    onPressed: _drawRoute,
+                    tooltip: 'Tracer itinéraire',
                   ),
                 ],
               ),

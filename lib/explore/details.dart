@@ -9,12 +9,15 @@ class details extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (Progs == null) {
+      return Scaffold(body: Center(child: Text('Données non disponibles')));
+    }
     return Scaffold(
       body: CustomScrollView(
         slivers: [
           SliverPersistentHeader(
             delegate: DetailSliverDelegate(
-              Progs: Progs,
+              Progs: Progs!,
               expandedHeight: 360,
               roundedContainerHeight: 30,
             ),

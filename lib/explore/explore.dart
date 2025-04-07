@@ -34,11 +34,15 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       title: Text(
         "Explorer un Programme",
-        style:  GoogleFonts.merriweather(fontSize: 18 , color: const Color(0xFF80C000),),
+        style: GoogleFonts.merriweather(
+          fontSize: 18,
+          color: const Color(0xFF80C000),
+        ),
       ),
       backgroundColor: Colors.white,
       foregroundColor: Colors.black,
-    );}
+    );
+  }
 }
 
 class SearchSection extends StatelessWidget {
@@ -145,7 +149,7 @@ class ProgSection extends StatelessWidget {
                                 decoration: BoxDecoration(
                                   color: Colors.white,
                                   borderRadius:
-                                  BorderRadius.all(Radius.circular(40)),
+                                      BorderRadius.all(Radius.circular(40)),
                                 ),
                                 child: Scaffold(
                                   backgroundColor: Colors.transparent,
@@ -226,7 +230,6 @@ class ProgCard extends StatelessWidget {
                   fit: BoxFit.cover,
                 ),
               ),
-
               child: Stack(
                 children: [
                   Positioned(
