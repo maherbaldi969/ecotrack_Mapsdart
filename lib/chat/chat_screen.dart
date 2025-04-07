@@ -24,8 +24,8 @@ class ChatScreen extends StatelessWidget {
       appBar: AppBar(
         elevation: 1,
         title: Row(
-          children: [
-            CircleAvatar(
+          children: [   
+            CircleAvatar(  
               backgroundImage: AssetImage('images/user.png'),
             ),
             SizedBox(width: 10),

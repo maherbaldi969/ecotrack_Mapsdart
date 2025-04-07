@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'alert_models.dart';
 import 'safety_database.dart';
 
+
 class WeatherService {
   final String _apiKey = '67a4b77d36511aa99b34762abd049431';
   final StreamController<WeatherData> _weatherStreamController =

@@ -19,6 +19,7 @@ void loadMarkersHebergements(Set<Marker> markers, BuildContext context,
           title: heb["nom"],
           snippet: "Hébergement en Nord-Ouest Tunisie",
         ),
+        consumeTapEvents: true,
         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
         onTap: () {
           showDialogFunction(heb);
@@ -107,6 +108,7 @@ void loadMarkersGuides(Set<Marker> markers, BuildContext context,
           title: guide["nom"],
           snippet: "Guide local disponible",
         ),
+        consumeTapEvents: true,
         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
         onTap: () {
           showDialogFunction(guide);
@@ -184,6 +186,7 @@ void loadMarkersRandonnees(Set<Marker> markers, BuildContext context,
           title: rando["nom"],
           snippet: "Randonnée disponible ici",
         ),
+        consumeTapEvents: true,
         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
         onTap: () {
           showDialogFunction(rando);

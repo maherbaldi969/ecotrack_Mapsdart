@@ -19,6 +19,7 @@ final List<Map<String, dynamic>> randonnees = [
   {"nom": "Cap Angela", "lat": 37.3450, "lng": 9.7436},
   {"nom": "Cap Hmem", "lat": 37.0291, "lng": 10.9118},
   {"nom": "Ghar El Melh", "lat": 37.1700, "lng": 10.1900},
+  {"nom": "Randonnée Cap Blanc", "lat": 37.1700, "lng": 10.1900},
 
   // Région de Jendouba
   {"nom": "Parc National d'El Feija", "lat": 36.5000, "lng": 8.3833},

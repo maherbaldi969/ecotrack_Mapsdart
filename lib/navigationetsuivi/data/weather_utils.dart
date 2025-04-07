@@ -8,6 +8,7 @@ import '../alerts/alert_service.dart';
 import '../alerts/weather_service.dart';
 import '../alerts/weather_data.dart';
 
+
 class WeatherUtils {
   static Future<Map<String, dynamic>?> fetchWeatherInfo(
       double latitude, double longitude) async {

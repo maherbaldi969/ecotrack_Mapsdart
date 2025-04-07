@@ -20,7 +20,7 @@ import 'widgets/safety_tips_card.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'data/markers_utils.dart';
 import 'data/custom_menu.dart';
-import 'data/filtre_utils.dart';
+import 'data/weather_utils.dart';
 
 class MapsPage extends StatefulWidget {
   @override
@@ -32,13 +32,12 @@ class MapsPage extends StatefulWidget {
 }
 
 class _MapsPageState extends State<MapsPage> {
+  List<Map<String, dynamic>> favoris = [];
   //  Déclaration des variables pour la carte, les marqueurs et les itinéraires
   GoogleMapController? mapController;
   final LatLng _center = const LatLng(36.9541, 8.7586);
   final LatLng _bizerteItineraryLocation = const LatLng(37.2744, 9.8739);
   final LatLng _center_kesra = const LatLng(35.8136, 9.3644);
-  final LatLng _center_1001NightsPalace =
-      const LatLng(36.5044, 8.7756); // Coordonnées de 1001-Nights Palace
   final Set<Marker> _markers = {};
   final Set<Polyline> _polylines = {}; //trajet
   TextEditingController _searchController = TextEditingController();
@@ -49,14 +48,20 @@ class _MapsPageState extends State<MapsPage> {
   final LatLng _defaultCenter =
       const LatLng(36.9541, 8.7586); // Centre par défaut
   LatLng? _initialCameraPosition; // Position initiale de la caméra
-  late final WeatherService _weatherService;
-  late final AlertService _alertService;
-  WeatherData? _currentWeather;
+  late final WeatherService _weatherService = WeatherService();
+  late final AlertService _alertService =
+      AlertService(flutterLocalNotificationsPlugin);
   StreamSubscription<WeatherData>? _weatherSubscription;
+  WeatherData? _currentWeather;
   bool _isOnline = true;
   Position? _lastPosition;
   StreamSubscription<Position>? _positionStream;
   bool _isTracking = false;
+  // 1. Dans votre classe _MapsPageState, ajoutez ces constantes pour les catégories
+  static const String _categoryAll = "Tous";
+  static const String _categoryHiking = "Randonnées";
+  static const String _categoryGuides = "Guides";
+  static const String _categoryAccommodation = "Hébergement";
 
   @override
   void initState() {
@@ -65,15 +70,31 @@ class _MapsPageState extends State<MapsPage> {
     _initialCameraPosition = widget.initialPosition ?? _defaultCenter;
     _addItineraryMarker();
     // Utilisation des fonctions du fichier markers_utils.dart
-    loadMarkersHebergements(_markers, context, _showRandoDialogWrapper);
+    loadMarkersHebergements(
+        _markers,
+        context,
+        (heb) => showCenteredDialog(
+            heb,
+            context,
+            (nom) => reserverGuide(nom, context),
+            (heb) => ajouterAuxFavoris(heb, context)));
     loadMarkersGuides(_markers, context, _showGuideDialogWrapper);
     loadMarkersRandonnees(_markers, context, _showRandoDialogWrapper);
-    _center_1001NightsPalace;
     _getCurrentLocation();
     _initializeNotifications(); // Initialiser les notifications
-    _weatherService = WeatherService();
-    _alertService = AlertService(flutterLocalNotificationsPlugin);
-    _initializeWeatherMonitoring();
+    // Initialisation météo avec gestion de l'abonnement
+    WeatherUtils.initializeWeatherMonitoring(
+      _weatherService,
+      _alertService,
+      _currentPosition,
+    ).then((subscription) {
+      if (mounted && subscription is StreamSubscription<WeatherData>) {
+        setState(() {
+          _weatherSubscription = subscription;
+        });
+      }
+      return null;
+    });
     _checkConnectivity(); // Utilisation des nouvelles fonctions
     // Vérifier la distance toutes les 30 secondes
     Timer.periodic(Duration(seconds: 15), (Timer timer) {
@@ -110,25 +131,6 @@ class _MapsPageState extends State<MapsPage> {
     );
   }
 
-  Future<void> _initializeWeatherMonitoring() async {
-    await _alertService.initialize();
-
-    _weatherSubscription = _weatherService.weatherStream.listen((weather) {
-      if (mounted) {
-        setState(() => _currentWeather = weather);
-      }
-      _alertService.checkForAlerts(weather);
-    });
-
-    // Vérification initiale
-    if (_currentPosition != null) {
-      _weatherService.fetchWeather(
-        _currentPosition!.latitude,
-        _currentPosition!.longitude,
-      );
-    }
-  }
-
   Future<void> _checkConnectivity() async {
     final connectivity = Connectivity();
     _isOnline =
@@ -146,11 +148,13 @@ class _MapsPageState extends State<MapsPage> {
 
   @override
   void dispose() {
-    _weatherSubscription?.cancel();
+    _weatherSubscription?.cancel(); // Annule l'abonnement météo
     _weatherService.dispose();
+    _positionStream?.cancel(); // Si vous avez un stream de position
     super.dispose();
   }
 
+//Mettre à jour _showWeatherDetails :
   void _showWeatherDetails() {
     if (_currentWeather == null) return;
 
@@ -167,43 +171,26 @@ class _MapsPageState extends State<MapsPage> {
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 16),
-            _buildWeatherDetailRow(Icons.thermostat, 'Température',
+            // Utilisation de la nouvelle fonction de construction de ligne
+            WeatherUtils.buildWeatherDetailRow(
+                context,
+                Icons.thermostat,
+                'Température',
                 '${_currentWeather!.temperature.toStringAsFixed(1)}°C'),
-            _buildWeatherDetailRow(
-                Icons.water_drop, 'Humidité', '${_currentWeather!.humidity}%'),
-            _buildWeatherDetailRow(Icons.air, 'Vent',
-                '${_currentWeather!.windSpeed.toStringAsFixed(1)} km/h'),
-            const SizedBox(height: 16),
-            if (_currentWeather!.alerts.isNotEmpty) ...[
-              Text(
-                'Alertes actives',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              ..._currentWeather!.alerts
-                  .map((alert) => ListTile(
-                        leading:
-                            const Icon(Icons.warning, color: Colors.orange),
-                        title: Text(alert.title),
-                        subtitle: Text(alert.description),
-                      ))
-                  .toList(),
-            ],
+            WeatherUtils.buildWeatherDetailRow(
+              context,
+              Icons.water_drop,
+              'Humidité',
+              '${_currentWeather!.humidity}%',
+            ),
+            WeatherUtils.buildWeatherDetailRow(
+              context,
+              Icons.air,
+              'Vent',
+              '${_currentWeather!.windSpeed.toStringAsFixed(1)} km/h',
+            ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildWeatherDetailRow(IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Icon(icon, size: 24),
-          const SizedBox(width: 16),
-          Text('$label: ', style: const TextStyle(fontWeight: FontWeight.bold)),
-          Text(value),
-        ],
       ),
     );
   }
@@ -684,6 +671,25 @@ class _MapsPageState extends State<MapsPage> {
         .showSnackBar(SnackBar(content: Text(message)));
   }
 
+  void reserverGuide(String hebergement, BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Réservation d'un guide pour $hebergement"),
+      ),
+    );
+  }
+
+  void ajouterAuxFavoris(Map<String, dynamic> heb, BuildContext context) {
+    if (!favoris.any((element) => element["nom"] == heb["nom"])) {
+      favoris.add(heb);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Ajouté aux favoris: ${heb["nom"]}"),
+        ),
+      );
+    }
+  }
+
   // Fonction pour gérer le clic sur la carte et définir la destination
   void _onMapTappede(LatLng tappedPoint) {
     setState(() {
@@ -846,13 +852,13 @@ class _MapsPageState extends State<MapsPage> {
     return points;
   }
 
+//Mettre à jour _showCurrentLocationDetails :
   Future<void> _showCurrentLocationDetails(
       BuildContext context, LatLng position) async {
-    // Récupérer les informations météo
-    final weatherInfo =
-        await _fetchWeatherInfo(position.latitude, position.longitude);
+    // Utilisation de la nouvelle fonction de récupération météo
+    final weatherInfo = await WeatherUtils.fetchWeatherInfo(
+        position.latitude, position.longitude);
 
-    // Définir les couleurs en fonction du mode sombre
     final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final Color backgroundColor = isDarkMode ? Colors.grey[850]! : Colors.white;
     final Color textColor = isDarkMode ? Colors.white : Colors.black;
@@ -864,9 +870,7 @@ class _MapsPageState extends State<MapsPage> {
           backgroundColor: backgroundColor,
           title: Text(
             "Détails de la position actuelle",
-            style: GoogleFonts.poppins(
-              color: textColor,
-            ),
+            style: GoogleFonts.poppins(color: textColor),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -874,60 +878,35 @@ class _MapsPageState extends State<MapsPage> {
             children: [
               Text(
                 "Latitude: ${position.latitude}",
-                style: GoogleFonts.poppins(
-                  color: textColor,
-                ),
+                style: GoogleFonts.poppins(color: textColor),
               ),
               Text(
                 "Longitude: ${position.longitude}",
-                style: GoogleFonts.poppins(
-                  color: textColor,
-                ),
+                style: GoogleFonts.poppins(color: textColor),
               ),
               const SizedBox(height: 10),
-              if (weatherInfo != null)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Météo: ${weatherInfo['weather']}",
-                      style: GoogleFonts.poppins(
-                        color: textColor,
-                      ),
-                    ),
-                    Text(
-                      "Température: ${weatherInfo['temperature']}°C",
-                      style: GoogleFonts.poppins(
-                        color: textColor,
-                      ),
-                    ),
-                    Text(
-                      "Humidité: ${weatherInfo['humidity']}%",
-                      style: GoogleFonts.poppins(
-                        color: textColor,
-                      ),
-                    ),
-                  ],
-                )
-              else
+              if (weatherInfo != null) ...[
                 Text(
-                  "Impossible de récupérer les informations météo.",
-                  style: GoogleFonts.poppins(
-                    color: textColor,
-                  ),
+                  "Météo: ${weatherInfo['weather']}",
+                  style: GoogleFonts.poppins(color: textColor),
                 ),
+                Text(
+                  "Température: ${weatherInfo['temperature']}°C",
+                  style: GoogleFonts.poppins(color: textColor),
+                ),
+                Text(
+                  "Humidité: ${weatherInfo['humidity']}%",
+                  style: GoogleFonts.poppins(color: textColor),
+                ),
+              ],
             ],
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+              onPressed: () => Navigator.of(context).pop(),
               child: Text(
                 "Fermer",
-                style: GoogleFonts.poppins(
-                  color: const Color(0xFF80C000), // Vert
-                ),
+                style: GoogleFonts.poppins(color: Color(0xFF80C000)),
               ),
             ),
           ],
@@ -937,33 +916,6 @@ class _MapsPageState extends State<MapsPage> {
   }
 
   //fonction en Dart qui récupère les informations météo
-  Future<Map<String, dynamic>?> _fetchWeatherInfo(
-      double latitude, double longitude) async {
-    const apiKey =
-        '67a4b77d36511aa99b34762abd049431'; // Remplacez par votre clé API OpenWeatherMap
-    final url =
-        'https://api.openweathermap.org/data/2.5/weather?lat=$latitude&lon=$longitude&appid=$apiKey&units=metric&lang=fr';
-
-    try {
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        return {
-          'weather': data['weather'][0]['description'],
-          'temperature': data['main']['temp'],
-          'humidity': data['main']['humidity'],
-        };
-      } else {
-        print(
-            "Erreur lors de la récupération des données: ${response.statusCode}");
-        return null;
-      }
-    } catch (e) {
-      print("Erreur lors de la récupération des informations météo: $e");
-      return null;
-    }
-  }
-
   // classe danger
   void _navigateToReportDangerPage() {
     Navigator.push(
@@ -1025,51 +977,71 @@ class _MapsPageState extends State<MapsPage> {
                     icon: const Icon(Icons.my_location, color: Colors.black),
                     onPressed: _getCurrentLocation,
                   ),
-                  PopupMenuButton<String>(
-                    onSelected: (value) {
-                      FiltreUtils.handleFilterSelection(value, (message) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(message)),
-                        );
-                      });
-                      // Ajoutez ici toute autre logique nécessaire après la sélection
-                    },
-                    itemBuilder: (BuildContext context) =>
-                        FiltreUtils.buildFilterMenuItems(context),
-                    icon: Icon(Icons.filter_list),
-                  ),
                 ],
               ),
             ),
           ],
         ),
       ),
-      body: Stack(
+      body: Column(
         children: [
-          GoogleMap(
-            onMapCreated: _onMapCreated,
-            initialCameraPosition: CameraPosition(
-              target: _center,
-              zoom: 11.0,
-            ),
-            markers: _markers,
-            myLocationEnabled: true,
-            polylines: _polylines,
-            myLocationButtonEnabled: false,
-            onTap: _onMapTapped,
-          ),
-
-          // Barre d'alerte météo (nouveau widget)
-          if (_currentWeather != null)
-            Positioned(
-              top: 70, // Position sous l'AppBar
-              left: 16,
-              right: 16,
-              child: WeatherAlertBar(
-                weather: _currentWeather!,
-                onTap: _showWeatherDetails,
+          // Barre de catégories
+          Container(
+            height: 50,
+            color: Color(0xFFEEEFF3), // Couleur grise fixe
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  SizedBox(width: 8),
+                  _buildCategoryButton(_categoryAll, () {
+                    _filterByCategory(_categoryAll);
+                  }),
+                  _buildCategoryButton(_categoryHiking, () {
+                    _filterByCategory(_categoryHiking);
+                  }),
+                  _buildCategoryButton(_categoryGuides, () {
+                    _filterByCategory(_categoryGuides);
+                  }),
+                  _buildCategoryButton(_categoryAccommodation, () {
+                    _filterByCategory(_categoryAccommodation);
+                  }),
+                  SizedBox(width: 8),
+                ],
               ),
             ),
+          ),
+          Expanded(
+            child: Stack(
+              children: [
+                GoogleMap(
+                  onMapCreated: _onMapCreated,
+                  initialCameraPosition: CameraPosition(
+                    target: _center,
+                    zoom: 11.0,
+                  ),
+                  markers: _isFilterActive ? _filteredMarkers : _markers,
+                  myLocationEnabled: true,
+                  polylines: _polylines,
+                  myLocationButtonEnabled: false,
+                  onTap: _onMapTapped,
+                ),
+
+                // Barre d'alerte météo
+                if (_currentWeather != null &&
+                    _currentWeather!.alerts.isNotEmpty)
+                  Positioned(
+                    top: 70,
+                    left: 16,
+                    right: 16,
+                    child: WeatherAlertBar(
+                      weather: _currentWeather!,
+                      onTap: _showWeatherDetails,
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ],
       ),
 
@@ -1089,7 +1061,7 @@ class _MapsPageState extends State<MapsPage> {
             child: Padding(
               padding: const EdgeInsets.only(left: 20, bottom: 20),
               child: FloatingActionButton(
-                onPressed: _navigateToReportDangerPage, // Correction
+                onPressed: _navigateToReportDangerPage,
                 child: Icon(Icons.warning, color: Colors.white),
                 backgroundColor:
                     Colors.red, // Couleur rouge pour indiquer un danger
@@ -1108,5 +1080,84 @@ class _MapsPageState extends State<MapsPage> {
         ],
       ),
     );
+  }
+
+  Widget _buildCategoryButton(String text, VoidCallback onPressed) {
+    final isActive = _activeFilter == text;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: ElevatedButton(
+        onPressed: () {
+          onPressed();
+          setState(() {
+            _activeFilter = text;
+          });
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: isActive ? Color(0xFF80C000) : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          padding: EdgeInsets.symmetric(horizontal: 16),
+        ),
+        child: Text(
+          text,
+          style: TextStyle(
+            color: isActive ? Colors.white : Colors.black,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Variables pour le filtrage
+  Set<Marker> _filteredMarkers = {};
+  bool _isFilterActive = false;
+  String _activeFilter = _categoryAll; // Pour suivre le filtre actif
+
+  void _filterByCategory(String category) {
+    setState(() {
+      _activeFilter = category;
+
+      if (category == _categoryAll) {
+        _isFilterActive = false;
+        return;
+      }
+
+      _isFilterActive = true;
+      _filteredMarkers = {};
+
+      switch (category) {
+        case _categoryHiking:
+          loadMarkersRandonnees(
+              _filteredMarkers, context, _showRandoDialogWrapper);
+          break;
+
+        case _categoryGuides:
+          loadMarkersGuides(_filteredMarkers, context, _showGuideDialogWrapper);
+          break;
+
+        case _categoryAccommodation:
+          loadMarkersHebergements(
+              _filteredMarkers,
+              context,
+              (heb) => showCenteredDialog(
+                  heb,
+                  context,
+                  (nom) => reserverGuide(nom, context),
+                  (heb) => ajouterAuxFavoris(heb, context)));
+          break;
+      }
+    });
+  }
+
+  void _resetFilters() {
+    setState(() {
+      _isFilterActive = false;
+    });
+  }
+
+  Set<Marker> get _currentMarkers {
+    return _isFilterActive ? _filteredMarkers : _markers;
   }
 }
