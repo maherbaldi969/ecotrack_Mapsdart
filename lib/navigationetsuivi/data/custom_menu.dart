@@ -3,13 +3,11 @@ import '../caméra.dart';
 import '../DownloadMapPage.dart';
 import '../OfflineMapPage.dart';
 import '/chat/chat_list_screen.dart';
-import '/chat/chat_screen.dart';
-
 
 class CustomMenu extends StatelessWidget {
   final Function sharePositionCallback;
 
-  const CustomMenu({Key? key, required this.sharePositionCallback}) 
+  const CustomMenu({Key? key, required this.sharePositionCallback})
       : super(key: key);
 
   TextStyle _boldTextStyle() {
@@ -156,7 +154,8 @@ class CustomMenu extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               ),
               onPressed: () {
                 Navigator.of(context).pop();
@@ -199,7 +198,8 @@ class CustomMenu extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               ),
               onPressed: () {
                 Navigator.of(context).pop();
@@ -242,7 +242,8 @@ class CustomMenu extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               ),
               onPressed: () {
                 Navigator.of(context).pop();
@@ -285,7 +286,8 @@ class CustomMenu extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               ),
               onPressed: () {
                 Navigator.of(context).pop();
