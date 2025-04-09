@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ecotrack/services/notifications_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -22,6 +23,51 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'data/markers_utils.dart';
 import 'data/custom_menu.dart';
 import 'data/weather_utils.dart';
+import 'package:latlong2/latlong.dart' as latlong2;
+
+class LocationAlerts {
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+
+  // Suivi de la position en temps réel
+  void trackLocation(latlong2.LatLng destination) {
+    const LocationSettings locationSettings = LocationSettings(
+      accuracy: LocationAccuracy.high,
+      distanceFilter: 10, // Mettre à jour la position tous les 10 mètres
+    );
+
+    Geolocator.getPositionStream(locationSettings: locationSettings)
+        .listen((Position position) {
+      final currentLocation =
+          latlong2.LatLng(position.latitude, position.longitude);
+      final distance = _calculateDistance(currentLocation, destination);
+
+      // Vérifier si l'utilisateur s'écarte de l'itinéraire
+      if (distance > 100) {
+        // 100 mètres de déviation
+        NotificationsService.showNotification(
+          title: 'Déviation de l\'itinéraire',
+          body: 'Vous vous êtes écarté de l\'itinéraire prévu.',
+        );
+      }
+
+      // Vérifier si l'utilisateur est immobile
+      if (position.speed < 1) {
+        // Vitesse inférieure à 1 m/s
+        NotificationsService.showNotification(
+          title: 'Difficulté détectée',
+          body: 'Vous semblez être immobile depuis un moment.',
+        );
+      }
+    });
+  }
+
+  // Calculer la distance entre deux points (en mètres)
+  double _calculateDistance(latlong2.LatLng point1, latlong2.LatLng point2) {
+    final latlong2.Distance distance = latlong2.Distance();
+    return distance(point1, point2);
+  }
+}
 
 class MapsPage extends StatefulWidget {
   @override
@@ -42,6 +88,13 @@ class _MapsPageState extends State<MapsPage> {
   final Set<Marker> _markers = {};
   final Set<Polyline> _polylines = {}; //trajet
   TextEditingController _searchController = TextEditingController();
+  final List<String> _searchHints = [
+    "Rechercher un lieu",
+    "Rechercher un guide",
+    "Rechercher un hébergement"
+  ];
+  int _currentHintIndex = 0;
+  Timer? _hintAnimationTimer;
   LatLng? _destination; // Destination sélectionnée par l'utilisateur
   double? _distanceRemaining; // Distance restante en kilomètres
   Position? _currentPosition; // Position actuelle de l'utilisateur
@@ -51,7 +104,8 @@ class _MapsPageState extends State<MapsPage> {
   LatLng? _initialCameraPosition; // Position initiale de la caméra
   late final WeatherService _weatherService = WeatherService();
   late final AlertService _alertService =
-      AlertService(flutterLocalNotificationsPlugin);
+      AlertService(FlutterLocalNotificationsPlugin());
+  final LocationAlerts _locationAlerts = LocationAlerts();
   StreamSubscription<WeatherData>? _weatherSubscription;
   WeatherData? _currentWeather;
   bool _isOnline = true;
@@ -68,7 +122,8 @@ class _MapsPageState extends State<MapsPage> {
   void initState() {
     super.initState();
     _initialCameraPosition = widget.initialPosition ?? _defaultCenter;
-    
+    _startHintAnimation();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeAppServices();
     });
@@ -76,8 +131,8 @@ class _MapsPageState extends State<MapsPage> {
 
   Future<void> _initializeAppServices() async {
     try {
-      // 1. Initialize notifications first
-      await _initializeNotifications();
+      // 1. Initialize notifications service
+      await NotificationsService.initialize();
 
       // 2. Check and request location permissions
       final locationStatus = await Permission.locationWhenInUse.status;
@@ -89,7 +144,7 @@ class _MapsPageState extends State<MapsPage> {
       if (locationStatus.isGranted) {
         _addItineraryMarker();
         await _getCurrentLocation();
-        
+
         loadMarkersHebergements(
           _markers,
           context,
@@ -110,7 +165,7 @@ class _MapsPageState extends State<MapsPage> {
           _alertService,
           _currentPosition,
         );
-        
+
         if (mounted && subscription is StreamSubscription<WeatherData>) {
           setState(() => _weatherSubscription = subscription);
         }
@@ -184,7 +239,26 @@ class _MapsPageState extends State<MapsPage> {
     _weatherSubscription?.cancel(); // Annule l'abonnement météo
     _weatherService.dispose();
     _positionStream?.cancel(); // Si vous avez un stream de position
+    _hintAnimationTimer?.cancel();
     super.dispose();
+  }
+
+  void _startHintAnimation() {
+    _hintAnimationTimer = Timer.periodic(Duration(seconds: 3), (timer) {
+      if (mounted) {
+        setState(() {
+          // First fade out
+          Future.delayed(Duration(milliseconds: 300), () {
+            if (mounted) {
+              setState(() {
+                // Then change text and fade in
+                _currentHintIndex = (_currentHintIndex + 1) % _searchHints.length;
+              });
+            }
+          });
+        });
+      }
+    });
   }
 
 //Mettre à jour _showWeatherDetails :
@@ -497,44 +571,7 @@ class _MapsPageState extends State<MapsPage> {
     );
   }
 
-  // Ajouté : Gestion des notifications
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
-  // Initialiser les notifications
-  Future<void> _initializeNotifications() async {
-    const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-
-    const InitializationSettings initializationSettings =
-        InitializationSettings(
-      android: initializationSettingsAndroid,
-    );
-
-    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
-  }
-
-  // Afficher une notification
-  Future<void> _showNotification(String title, String body) async {
-    const AndroidNotificationDetails androidPlatformChannelSpecifics =
-        AndroidNotificationDetails(
-      'location_alerts_channel',
-      'Location Alerts',
-      importance: Importance.high,
-      priority: Priority.high,
-    );
-
-    const NotificationDetails platformChannelSpecifics =
-        NotificationDetails(android: androidPlatformChannelSpecifics);
-
-    await flutterLocalNotificationsPlugin.show(
-      0,
-      title,
-      body,
-      platformChannelSpecifics,
-    );
-  }
-
-  // Exemple : Afficher une notification lors de la sélection d'une destination
+  // Utiliser NotificationsService pour les notifications
   void _onMapTapped(LatLng tappedPoint) {
     setState(() {
       _destination = tappedPoint;
@@ -560,10 +597,16 @@ class _MapsPageState extends State<MapsPage> {
       }
 
       // Afficher une notification
-      _showNotification(
-        "Nouvelle destination sélectionnée",
-        "Latitude: ${tappedPoint.latitude}, Longitude: ${tappedPoint.longitude}",
+      NotificationsService.showLocationNotification(
+        title: "Nouvelle destination sélectionnée",
+        body: "Position",
+        latitude: tappedPoint.latitude,
+        longitude: tappedPoint.longitude,
       );
+
+      // Start tracking location to destination
+      _locationAlerts.trackLocation(
+          latlong2.LatLng(tappedPoint.latitude, tappedPoint.longitude));
 
       _showDestinationDetails(context);
     });
@@ -582,9 +625,9 @@ class _MapsPageState extends State<MapsPage> {
 
       if (distance > 1.0) {
         // Seuil de déviation : 1 km
-        _showNotification(
-          "Déviation détectée",
-          "Vous vous êtes écarté de l'itinéraire prévu.",
+        NotificationsService.showNotification(
+          title: "Déviation détectée",
+          body: "Vous vous êtes écarté de l'itinéraire prévu.",
         );
       }
     }
@@ -695,8 +738,9 @@ class _MapsPageState extends State<MapsPage> {
 
       setState(() {
         // Supprimer l'ancien marqueur de recherche s'il existe
-        _markers.removeWhere((marker) => marker.markerId.value == "search_result");
-        
+        _markers
+            .removeWhere((marker) => marker.markerId.value == "search_result");
+
         // Ajouter le nouveau marqueur
         _markers.add(
           Marker(
@@ -706,19 +750,21 @@ class _MapsPageState extends State<MapsPage> {
               title: searchText,
               snippet: "Destination recherchée",
             ),
-            icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+            icon:
+                BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
           ),
         );
 
         // Définir comme destination
         _destination = searchPosition;
-        _distanceRemaining = _currentPosition != null 
+        _distanceRemaining = _currentPosition != null
             ? Geolocator.distanceBetween(
-                _currentPosition!.latitude,
-                _currentPosition!.longitude,
-                searchPosition.latitude,
-                searchPosition.longitude,
-              ) / 1000
+                  _currentPosition!.latitude,
+                  _currentPosition!.longitude,
+                  searchPosition.latitude,
+                  searchPosition.longitude,
+                ) /
+                1000
             : null;
       });
 
@@ -861,12 +907,14 @@ class _MapsPageState extends State<MapsPage> {
   // Fonction pour tracer un itinéraire entre la position actuelle et la destination
   Future<void> _drawRoute() async {
     if (_currentPosition == null) {
-      _showSnackBar("Veuillez activer la localisation pour tracer un itinéraire.");
+      _showSnackBar(
+          "Veuillez activer la localisation pour tracer un itinéraire.");
       return;
     }
-    
+
     if (_destination == null) {
-      _showSnackBar("Veuillez d'abord sélectionner une destination en cliquant sur la carte.");
+      _showSnackBar(
+          "Veuillez d'abord sélectionner une destination en cliquant sur la carte.");
       return;
     }
 
@@ -894,7 +942,7 @@ class _MapsPageState extends State<MapsPage> {
         },
         googleApiKey: 'AIzaSyDaH6YTETPcQMnNjAFptWwSnjVs_oF31Y0',
       );
-      
+
       // Zoom pour afficher l'itinéraire complet
       if (mapController != null) {
         final bounds = LatLngBounds(
@@ -920,7 +968,7 @@ class _MapsPageState extends State<MapsPage> {
       if (Navigator.canPop(context)) {
         Navigator.of(context).pop();
       }
-      
+
       _showSnackBar("Erreur lors du tracé de l'itinéraire: ${e.toString()}");
       debugPrint("Route drawing error: $e");
     }
@@ -931,11 +979,12 @@ class _MapsPageState extends State<MapsPage> {
     if (_currentPosition == null || _destination == null) return;
 
     final distance = Geolocator.distanceBetween(
-      _currentPosition!.latitude,
-      _currentPosition!.longitude,
-      _destination!.latitude,
-      _destination!.longitude,
-    ) / 1000; // Convertir en kilomètres
+          _currentPosition!.latitude,
+          _currentPosition!.longitude,
+          _destination!.latitude,
+          _destination!.longitude,
+        ) /
+        1000; // Convertir en kilomètres
 
     // Estimation de la durée (en minutes) - 5 min par km en voiture
     final estimatedDuration = (distance * 5).toInt();
@@ -1088,7 +1137,7 @@ class _MapsPageState extends State<MapsPage> {
                     child: TextField(
                       controller: _searchController,
                       decoration: InputDecoration(
-                        hintText: "Rechercher un lieu...",
+                        hintText: _searchHints[_currentHintIndex],
                         contentPadding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 12),
                         border: OutlineInputBorder(
@@ -1105,6 +1154,10 @@ class _MapsPageState extends State<MapsPage> {
                                 },
                               )
                             : null,
+                        hintStyle: TextStyle(
+                          color: Colors.grey,
+                          fontSize: 16,
+                        ),
                       ),
                       onSubmitted: (value) => _searchLocation(),
                     ),
