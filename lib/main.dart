@@ -26,6 +26,7 @@ import 'evaluation/evaluation_service.dart';
 import 'evaluation/notification_service.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'supportclients/support_home.dart';
+import 'package:ecotrack/alertes_meteo/weather_alert_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -150,6 +151,7 @@ class _EcoTrackAppState extends State<EcoTrackApp> {
         '/': (context) => const MyHomePage(title: 'EcoTrack'),
         '/itineraries': (context) => ItineraryListScreen(),
         '/map': (context) => MapsPage(),
+        '/meteo': (context) => WeatherAlertScreen(),
         '/maps': (context) => MapsPage1(),
         '/favorites': (context) => FavoritesScreen(),
         '/downloaded-itineraries': (context) => DownloadedItinerariesPage(),
@@ -326,6 +328,7 @@ class _MyHomePageState extends State<MyHomePage> {
               Icons.notifications, "Notifications", '/Not', context),
           _buildDrawerItem(Icons.settings, "Paramètres", '', context),
           _buildDrawerItem(Icons.history, "Historique", '/history', context),
+          _buildDrawerItem(Icons.cloud, "Météo", '/meteo', context),
         ],
       ),
     );

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'support_style.dart';
 import 'support_chat.dart';
-import 'support_formulaire.dart';
-import 'support_faq.dart';
 import 'support_appel.dart';
+import 'support_faq.dart';
+import 'support_formulaire.dart';
+import 'support_redirect.dart';
+import 'support_history.dart';
 
 class SupportHome extends StatelessWidget {
   const SupportHome({super.key});
@@ -12,127 +14,97 @@ class SupportHome extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Support Client', style: merriweatherBold.copyWith(fontSize: 24)),
+        title: Text('Support Client', style: merriweatherBold),
         backgroundColor: vertPrimaire,
         foregroundColor: blanc,
-        elevation: 0,
-        centerTitle: true,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(
-            bottom: Radius.circular(20),
-          ),
-        ),
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [blanc.withOpacity(0.9), vertPrimaire.withOpacity(0.1)],
+      body: GridView.count(
+        crossAxisCount: 2,
+        padding: const EdgeInsets.all(16),
+        children: [
+          _SupportOption(
+            icon: Icons.chat,
+            title: 'Chat en direct',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => SupportChat()),
+            ),
           ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
-          child: Column(
-            children: [
-              Text(
-                'Comment pouvons-nous vous aider ?',
-                style: merriweatherBold.copyWith(fontSize: 20, color: noir),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              Expanded(
-                child: GridView.count(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 16,
-                  crossAxisSpacing: 16,
-                  childAspectRatio: 1.1,
-                  children: [
-                    _OptionSupport(
-                      icon: Icons.chat_bubble_outlined,
-                      titre: "Chat en direct",
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const SupportChat()),
-                      ),
-                    ),
-                    _OptionSupport(
-                      icon: Icons.email_outlined,
-                      titre: "Formulaire de contact",
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const SupportFormulaire()),
-                      ),
-                    ),
-                    _OptionSupport(
-                      icon: Icons.phone_outlined,
-                      titre: "Appeler le support",
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const SupportAppel()),
-                      ),
-                    ),
-                    _OptionSupport(
-                      icon: Icons.help_outline,
-                      titre: "FAQ",
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const SupportFAQ()),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          _SupportOption(
+            icon: Icons.phone,
+            title: 'Appel téléphonique',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => SupportAppel()),
+            ),
           ),
-        ),
+          _SupportOption(
+            icon: Icons.help_outline,
+            title: 'FAQ & Guides',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => SupportFAQ()),
+            ),
+          ),
+          _SupportOption(
+            icon: Icons.assignment,
+            title: 'Formulaire',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => SupportFormulaire()),
+            ),
+          ),
+          _SupportOption(
+            icon: Icons.history,
+            title: 'Historique',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => SupportHistory()),
+            ),
+          ),
+          _SupportOption(
+            icon: Icons.place,
+            title: 'Partenaires locaux',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => SupportRedirect()),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _OptionSupport extends StatelessWidget {
+class _SupportOption extends StatelessWidget {
   final IconData icon;
-  final String titre;
+  final String title;
   final VoidCallback onTap;
 
-  const _OptionSupport({
+  const _SupportOption({
     required this.icon,
-    required this.titre,
+    required this.title,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
-      ),
+      elevation: 2,
       child: InkWell(
-        borderRadius: BorderRadius.circular(15),
         onTap: onTap,
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(15),
-            color: blanc,
-          ),
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                decoration: BoxDecoration(
-                  color: vertPrimaire.withOpacity(0.2),
-                  shape: BoxShape.circle,
-                ),
-                padding: const EdgeInsets.all(16),
-                child: Icon(icon, size: 32, color: vertPrimaire),
-              ),
-              const SizedBox(height: 16),
+              Icon(icon, size: 40, color: vertPrimaire),
+              const SizedBox(height: 8),
               Text(
-                titre,
-                style: merriweatherBold.copyWith(color: noir, fontSize: 16),
+                title,
                 textAlign: TextAlign.center,
+                style: merriweatherBold.copyWith(fontSize: 16),
               ),
             ],
           ),

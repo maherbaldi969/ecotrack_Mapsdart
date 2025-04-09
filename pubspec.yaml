@@ -30,6 +30,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  url_launcher: ^6.3.1
   google_maps_flutter: ^2.10.1
   google_maps_flutter_web: ^0.5.12
   geolocator: ^9.0.2
@@ -37,7 +38,6 @@ dependencies:
   geocoding: ^2.1.1
   flutter_polyline_points: ^1.0.0
   google_maps_webservice: ^0.0.20-nullsafety.5
-  url_launcher: ^6.3.1
   permission_handler: ^11.4.0
   image_picker: ^1.0.4
   google_fonts: ^4.0.4

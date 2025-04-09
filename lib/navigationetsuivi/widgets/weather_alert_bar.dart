@@ -61,9 +61,8 @@ class _WeatherAlertBarState extends State<WeatherAlertBar> {
         children: [
           Icon(
             hasAlerts ? Icons.warning : Icons.check_circle,
-            color: hasAlerts
-                ? theme.colorScheme.error
-                : theme.colorScheme.primary,
+            color:
+                hasAlerts ? theme.colorScheme.error : theme.colorScheme.primary,
           ),
           const SizedBox(width: 12),
           Expanded(

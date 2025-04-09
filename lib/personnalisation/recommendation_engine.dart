@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import '../models/activity.dart';
 import '../models/user_preferences.dart';
 
