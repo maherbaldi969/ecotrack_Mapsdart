@@ -114,7 +114,7 @@ class SearchSection extends StatelessWidget {
 }
 
 class ProgSection extends StatelessWidget {
-  final List<progModels> progs = progModels.Progs();
+  final List<progModels> progs = progModels.Progs().take(20).toList();
 
   @override
   Widget build(BuildContext context) {
@@ -128,7 +128,7 @@ class ProgSection extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('550 Programmes',
+                Text('${progs.length} Programmes',
                     style: GoogleFonts.poppins(
                         color: Color(0xFF80C000), fontSize: 15)),
                 Row(
@@ -192,12 +192,20 @@ class ProgCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => details(Progs: progData),
-          ),
-        );
+        try {
+          if (progData != null) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => details(Progs: progData),
+              ),
+            );
+          }
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Erreur: impossible d'ouvrir les détails")),
+          );
+        }
       },
       child: Container(
         margin: EdgeInsets.all(10),
@@ -225,29 +233,36 @@ class ProgCard extends StatelessWidget {
                   topLeft: Radius.circular(18),
                   topRight: Radius.circular(18),
                 ),
-                image: DecorationImage(
-                  image: AssetImage(progData.Picture),
-                  fit: BoxFit.cover,
-                ),
+                color: Colors.grey[200],
               ),
-              child: Stack(
-                children: [
-                  Positioned(
-                    top: 5,
-                    right: -15,
-                    child: MaterialButton(
-                      color: Colors.white,
-                      shape: CircleBorder(),
-                      onPressed: () {},
-                      child: Icon(
-                        Icons.favorite_outline_rounded,
-                        color: Color(0xFF80C000),
-                        size: 20,
-                      ),
-                    ),
-                  )
-                ],
-              ),
+              child: progData.Picture != null
+                  ? Stack(
+                      children: <Widget>[
+                        Image.asset(
+                          progData.Picture,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: double.infinity,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(color: Colors.grey[200]),
+                        ),
+                        Positioned(
+                          top: 5,
+                          right: -15,
+                          child: MaterialButton(
+                            color: Colors.white,
+                            shape: CircleBorder(),
+                            onPressed: () {},
+                            child: Icon(
+                              Icons.favorite_outline_rounded,
+                              color: Color(0xFF80C000),
+                              size: 20,
+                            ),
+                          ),
+                        )
+                      ],
+                    )
+                  : null,
             ),
             Container(
               margin: EdgeInsets.fromLTRB(10, 10, 10, 0),

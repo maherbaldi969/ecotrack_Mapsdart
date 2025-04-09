@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http; // Importation du package http
 import 'data/tracer_itinéraire.dart';
-import 'dart:convert'; // Pour utiliser json.decode
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'DangerPage.dart';
@@ -68,40 +67,72 @@ class _MapsPageState extends State<MapsPage> {
   @override
   void initState() {
     super.initState();
-    // Utilisez initialPosition si fourni, sinon utilisez le centre par défaut
     _initialCameraPosition = widget.initialPosition ?? _defaultCenter;
-    _addItineraryMarker();
-    // Utilisation des fonctions du fichier markers_utils.dart
-    loadMarkersHebergements(
-        _markers,
-        context,
-        (heb) => showCenteredDialog(
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeAppServices();
+    });
+  }
+
+  Future<void> _initializeAppServices() async {
+    try {
+      // 1. Initialize notifications first
+      await _initializeNotifications();
+
+      // 2. Check and request location permissions
+      final locationStatus = await Permission.locationWhenInUse.status;
+      if (!locationStatus.isGranted) {
+        await Permission.locationWhenInUse.request();
+      }
+
+      // 3. Load initial data if permissions granted
+      if (locationStatus.isGranted) {
+        _addItineraryMarker();
+        await _getCurrentLocation();
+        
+        loadMarkersHebergements(
+          _markers,
+          context,
+          (heb) => showCenteredDialog(
             heb,
             context,
             (nom) => reserverGuide(nom, context),
-            (heb) => ajouterAuxFavoris(heb, context)));
-    loadMarkersGuides(_markers, context, _showGuideDialogWrapper);
-    loadMarkersRandonnees(_markers, context, _showRandoDialogWrapper);
-    _getCurrentLocation();
-    _initializeNotifications(); // Initialiser les notifications
-    // Initialisation météo avec gestion de l'abonnement
-    WeatherUtils.initializeWeatherMonitoring(
-      _weatherService,
-      _alertService,
-      _currentPosition,
-    ).then((subscription) {
-      if (mounted && subscription is StreamSubscription<WeatherData>) {
-        setState(() {
-          _weatherSubscription = subscription;
-        });
+            (heb) => ajouterAuxFavoris(heb, context),
+          ),
+        );
+
+        loadMarkersGuides(_markers, context, _showGuideDialogWrapper);
+        loadMarkersRandonnees(_markers, context, _showRandoDialogWrapper);
+
+        // 4. Initialize weather monitoring
+        final subscription = await WeatherUtils.initializeWeatherMonitoring(
+          _weatherService,
+          _alertService,
+          _currentPosition,
+        );
+        
+        if (mounted && subscription is StreamSubscription<WeatherData>) {
+          setState(() => _weatherSubscription = subscription);
+        }
+
+        // 5. Start periodic checks
+        if (mounted) {
+          Timer.periodic(Duration(seconds: 15), (Timer timer) {
+            if (mounted) _checkDistanceToKesra();
+          });
+        }
       }
-      return null;
-    });
-    _checkConnectivity(); // Utilisation des nouvelles fonctions
-    // Vérifier la distance toutes les 30 secondes
-    Timer.periodic(Duration(seconds: 15), (Timer timer) {
-      _checkDistanceToKesra(); // Appeler la fonction pour vérifier la distance à Kesra
-    });
+
+      // 6. Check connectivity
+      await _checkConnectivity();
+    } catch (e) {
+      debugPrint('Initialization error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Initialization error: ${e.toString()}')),
+        );
+      }
+    }
   }
 
 // Wrapper pour les dialogues de randonnée

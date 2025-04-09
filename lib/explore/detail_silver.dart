@@ -24,6 +24,10 @@ class DetailSliverDelegate extends SliverPersistentHeaderDelegate {
             width: MediaQuery.of(context).size.width,
             height: expandedHeight,
             fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) => Container(
+              color: Colors.grey[200],
+              child: Icon(Icons.image_not_supported, color: Color(0xFF80C000)),
+            ),
           ),
         ),
         // Back Button (Left)
