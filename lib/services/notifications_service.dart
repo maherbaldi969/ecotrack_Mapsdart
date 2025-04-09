@@ -1,10 +1,15 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/timezone.dart' as tz;
+import 'package:timezone/data/latest.dart' as tz;
 
 class NotificationsService {
   static final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
   static Future<void> initialize() async {
+    // Initialiser timezone
+    tz.initializeTimeZones();
+    
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
@@ -49,6 +54,40 @@ class NotificationsService {
     await showNotification(
       title: title,
       body: '$body\nLat: $latitude, Long: $longitude',
+    );
+  }
+
+  static Future<void> scheduleNotification({
+    required String title,
+    required String body,
+    required Duration delay,
+    int id = 0,
+  }) async {
+    final scheduledTime = tz.TZDateTime.from(
+      DateTime.now().add(delay),
+      tz.local,
+    );
+    
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+      'scheduled_notifications_channel',
+      'Scheduled Notifications',
+      importance: Importance.high,
+      priority: Priority.high,
+    );
+
+    const NotificationDetails platformChannelSpecifics =
+        NotificationDetails(android: androidPlatformChannelSpecifics);
+
+    await _notificationsPlugin.zonedSchedule(
+      id,
+      title,
+      body,
+      scheduledTime,
+      platformChannelSpecifics,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
     );
   }
 }
