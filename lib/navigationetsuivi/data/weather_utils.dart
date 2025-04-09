@@ -2,12 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:geolocator/geolocator.dart';
 import '../alerts/alert_service.dart';
 import '../alerts/weather_service.dart';
-import '../alerts/weather_data.dart';
-
 
 class WeatherUtils {
   static Future<Map<String, dynamic>?> fetchWeatherInfo(

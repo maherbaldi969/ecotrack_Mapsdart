@@ -137,39 +137,39 @@ class ProgSection extends StatelessWidget {
                         style: GoogleFonts.poppins(
                             color: Color(0xFF80C000), fontSize: 15)),
                     IconButton(
-                        onPressed: () {
-                          showGeneralDialog(
-                            barrierDismissible: true,
-                            barrierLabel: "Sign In",
-                            context: context,
-                            pageBuilder: (context, _, __) => Center(
-                              child: Container(
-                                height: 620,
-                                margin: EdgeInsets.symmetric(horizontal: 16),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(40)),
-                                ),
-                                child: Scaffold(
-                                  backgroundColor: Colors.transparent,
-                                  body: Column(
-                                    children: [
-                                      FilterModal(),
-                                    ],
-                                  ),
+                      onPressed: () {
+                        showGeneralDialog(
+                          barrierDismissible: true,
+                          barrierLabel: "Filtrer",
+                          context: context,
+                          pageBuilder: (context, _, __) => Dialog(
+                            insetPadding: EdgeInsets.all(16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(40),
+                            ),
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxHeight:
+                                    MediaQuery.of(context).size.height * 0.8,
+                              ),
+                              child: SingleChildScrollView(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: FilterModal(),
                                 ),
                               ),
                             ),
-                          );
-                        },
-                        icon: Icon(
-                          Icons.filter_list_outlined,
-                          color: vert,
-                          size: 25,
-                        ))
+                          ),
+                        );
+                      },
+                      icon: Icon(
+                        Icons.filter_list_outlined,
+                        color: vert,
+                        size: 25,
+                      ),
+                    )
                   ],
-                ),
+                )
               ],
             ),
           ),

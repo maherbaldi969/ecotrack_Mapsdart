@@ -11,9 +11,7 @@ import 'models/itinerary.dart';
 import 'models/favorites_manager.dart';
 import 'navigationetsuivi/itinéraires_WordPress.dart';
 import 'screens/écran_desuivi.dart';
-import 'navigationetsuivi/Notifications.dart';
 import 'screens/history.dart';
-import 'screens/map_screen.dart';
 import 'screens/Badge.dart';
 import 'chat/chat_list_screen.dart';
 import 'explore/explore.dart';
@@ -156,9 +154,7 @@ class _EcoTrackAppState extends State<EcoTrackApp> {
         '/favorites': (context) => FavoritesScreen(),
         '/downloaded-itineraries': (context) => DownloadedItinerariesPage(),
         '/tracking': (context) => TrackingScreen(),
-        '/Not': (context) => LocationAlertsPage(),
         '/history': (context) => HistoriqueRandonneesPage(),
-        '/scren': (context) => MapScreen(),
         '/guide': (context) => ChatListScreen(),
         '/explore': (context) => Explore(),
         '/mapage': (context) => FitnessApp(),
@@ -317,7 +313,6 @@ class _MyHomePageState extends State<MyHomePage> {
           _buildDrawerItem(
               Icons.directions, "Itinéraires", '/itineraries', context),
           _buildDrawerItem(Icons.cloud, "Météo", '/tracking', context),
-          _buildDrawerItem(Icons.cloud, "map_scren", '/scren', context),
           _buildDrawerItem(Icons.assignment, "Créer un programme",
               '/custom-program', context),
           _buildDrawerItem(Icons.assignment, "Badage", '/badage', context),
