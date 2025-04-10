@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'weather_service.dart';
 import 'weather_style.dart';
 import 'safety_tips.dart';
@@ -18,7 +19,25 @@ class _WeatherAlertScreenState extends State<WeatherAlertScreen> {
   void initState() {
     super.initState();
     _weatherService = WeatherService();
-    _weatherService.fetchWeatherAlerts(36.8, 10.1); // Coordonnées par défaut (Tunis)
+    _loadAlerts();
+  }
+
+  Future<void> _loadAlerts() async {
+    try {
+      // D'abord essayer de charger depuis le cache
+      final cachedAlerts = await _weatherService.getOfflineAlerts();
+      if (cachedAlerts.isNotEmpty) {
+        if (mounted) {
+          setState(() {});
+        }
+      }
+
+      // Puis essayer de rafraîchir depuis l'API
+      await _weatherService.fetchWeatherAlerts(
+          36.8, 10.1); // Coordonnées par défaut (Tunis)
+    } catch (e) {
+      debugPrint('Erreur de chargement des alertes: $e');
+    }
   }
 
   @override
@@ -35,7 +54,7 @@ class _WeatherAlertScreenState extends State<WeatherAlertScreen> {
         backgroundColor: vertPrimaire,
         foregroundColor: blanc,
       ),
-      body: StreamBuilder<Map<String, dynamic>>(
+      body: StreamBuilder<List<Map<String, dynamic>>>(
         stream: _weatherService.weatherAlerts,
         builder: (context, snapshot) {
           if (snapshot.hasError) {
@@ -44,6 +63,10 @@ class _WeatherAlertScreenState extends State<WeatherAlertScreen> {
 
           if (!snapshot.hasData) {
             return _buildLoadingState();
+          }
+          
+          if (snapshot.data!.isEmpty) {
+            return _buildNoAlertsState();
           }
 
           final alerts = snapshot.data!;
@@ -76,29 +99,118 @@ class _WeatherAlertScreenState extends State<WeatherAlertScreen> {
           Text('Erreur de connexion', style: merriweatherBold),
           const SizedBox(height: 8),
           Text('Vérifiez votre connexion internet', style: merriweatherNormal),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: vertPrimaire),
+            onPressed: _loadAlerts,
+            child: Text('Réessayer', style: merriweatherBold.copyWith(color: blanc)),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildAlertList(Map<String, dynamic> alerts) {
+  Widget _buildNoAlertsState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.check_circle_outline, size: 48, color: vertPrimaire),
+          const SizedBox(height: 16),
+          Text('Aucune alerte active', style: merriweatherBold),
+          const SizedBox(height: 8),
+          Text('Tout semble calme pour le moment', style: merriweatherNormal),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: vertPrimaire),
+            onPressed: _loadAlerts,
+            child: Text('Rafraîchir', style: merriweatherBold.copyWith(color: blanc)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAlertList(List<Map<String, dynamic>> alerts) {
     return ListView.builder(
       itemCount: alerts.length,
       itemBuilder: (context, index) {
-        final alert = alerts.values.elementAt(index);
+        final alert = alerts[index];
+        final severity = alert['severity']?.toString().toLowerCase() ?? '';
+        final effective = alert['effective'] ?? '';
+        final expires = alert['expires'] ?? '';
+        
         return Card(
           margin: const EdgeInsets.all(8),
-          color: _getAlertColor(alert['severity']),
-          child: ListTile(
-            leading: _getAlertIcon(alert['severity']),
-            title: Text(alert['title'], style: merriweatherBold.copyWith(color: blanc)),
-            subtitle: Text(alert['description'], style: merriweatherNormal.copyWith(color: blanc)),
-            trailing: Icon(Icons.chevron_right, color: blanc),
+          color: _getAlertColor(severity),
+          child: InkWell(
             onTap: () => _showAlertDetails(alert),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      _getAlertIcon(severity),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          alert['title'] ?? 'Alerte météo',
+                          style: merriweatherBold.copyWith(
+                            color: blanc,
+                            fontSize: 18
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    alert['description'] ?? '',
+                    style: merriweatherNormal.copyWith(color: blanc),
+                  ),
+                  const SizedBox(height: 12),
+                  if (effective.isNotEmpty || expires.isNotEmpty)
+                    Row(
+                      children: [
+                        if (effective.isNotEmpty)
+                          Text(
+                            'Début: ${_formatDateTime(effective)}',
+                            style: merriweatherNormal.copyWith(
+                              color: blanc,
+                              fontSize: 12
+                            ),
+                          ),
+                        if (expires.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 16),
+                            child: Text(
+                              'Fin: ${_formatDateTime(expires)}',
+                              style: merriweatherNormal.copyWith(
+                                color: blanc,
+                                fontSize: 12
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                ],
+              ),
+            ),
           ),
         );
       },
     );
+  }
+
+  String _formatDateTime(String dateTimeStr) {
+    try {
+      final dateTime = DateTime.parse(dateTimeStr);
+      return DateFormat('dd/MM HH:mm').format(dateTime);
+    } catch (e) {
+      return dateTimeStr;
+    }
   }
 
   Color _getAlertColor(String severity) {
@@ -132,7 +244,8 @@ class _WeatherAlertScreenState extends State<WeatherAlertScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(alert['title'], style: merriweatherBold.copyWith(fontSize: 20)),
+              Text(alert['title'],
+                  style: merriweatherBold.copyWith(fontSize: 20)),
               const SizedBox(height: 16),
               Text(alert['description'], style: merriweatherNormal),
               const SizedBox(height: 24),

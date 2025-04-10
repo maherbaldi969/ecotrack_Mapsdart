@@ -2,14 +2,15 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class WeatherService {
   final String _apiKey = '67a4b77d36511aa99b34762abd049431';
   final String _baseUrl = 'https://api.weatherapi.com/v1';
-  final StreamController<Map<String, dynamic>> _alertController =
-      StreamController<Map<String, dynamic>>.broadcast();
+  final StreamController<List<Map<String, dynamic>>> _alertController =
+      StreamController<List<Map<String, dynamic>>>.broadcast();
 
-  Stream<Map<String, dynamic>> get weatherAlerts => _alertController.stream;
+  Stream<List<Map<String, dynamic>>> get weatherAlerts => _alertController.stream;
 
   Future<void> fetchWeatherAlerts(double lat, double lon) async {
     try {
@@ -18,15 +19,30 @@ class WeatherService {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        _alertController.add(data['alerts']);
+        final alerts = List<Map<String, dynamic>>.from(data['alerts']);
+        _alertController.add(alerts);
+        await _saveAlertsToCache(alerts);
       }
     } catch (e) {
       debugPrint('Error fetching weather alerts: $e');
     }
   }
 
+  Future<void> _saveAlertsToCache(List<Map<String, dynamic>> alerts) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('cached_alerts', json.encode(alerts));
+  }
+
   Future<List<Map<String, dynamic>>> getOfflineAlerts() async {
-    // Implémentation du cache local pour le mode hors ligne
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cachedData = prefs.getString('cached_alerts');
+      if (cachedData != null) {
+        return List<Map<String, dynamic>>.from(json.decode(cachedData));
+      }
+    } catch (e) {
+      debugPrint('Erreur de lecture du cache: $e');
+    }
     return [];
   }
 

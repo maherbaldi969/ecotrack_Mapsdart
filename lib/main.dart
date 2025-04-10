@@ -27,6 +27,10 @@ import 'evaluation/notification_service.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'supportclients/support_home.dart';
 import 'package:ecotrack/alertes_meteo/weather_alert_screen.dart';
+import 'package:ecotrack/recommandations_preferences/recommandations_screen.dart';
+import 'package:ecotrack/services/shared_preferences_service.dart';
+import 'package:ecotrack/recommandations_preferences/activity_history_service.dart';
+import 'package:ecotrack/recommandations_preferences/recommandations_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -54,6 +58,10 @@ void main() async {
         Provider(
             create: (context) => AlertService(flutterLocalNotificationsPlugin)),
         Provider(create: (context) => EvaluationService()),
+        Provider(create: (context) => RecommandationsService(
+          SharedPreferencesService(),
+          ActivityHistoryService(),
+        )),
 
         // Ajoutez d'autres providers ici si nécessaire
       ],
@@ -154,6 +162,7 @@ class _EcoTrackAppState extends State<EcoTrackApp> {
         '/meteo': (context) => WeatherAlertScreen(),
         '/maps': (context) => MapsPage1(),
         '/favorites': (context) => FavoritesScreen(),
+        '/recommandations': (context) => const RecommandationsScreen(),
         '/downloaded-itineraries': (context) => DownloadedItinerariesPage(),
         '/tracking': (context) => TrackingScreen(),
         '/history': (context) => HistoriqueRandonneesPage(),
@@ -323,8 +332,10 @@ class _MyHomePageState extends State<MyHomePage> {
           _buildDrawerItem(Icons.help, "Support client", '/support', context),
           _buildDrawerItem(
               Icons.handshake, "Partenaire", '/partenaire', context),
-          const Divider(),
           _buildDrawerItem(
+              Icons.handshake, "Recommandations", '/recommandations', context),
+          const Divider(),
+          _buildDrawerItem(  
               Icons.notifications, "Notifications", '/Not', context),
           _buildDrawerItem(Icons.settings, "Paramètres", '', context),
           _buildDrawerItem(Icons.history, "Historique", '/history', context),

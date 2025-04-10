@@ -11,18 +11,19 @@ class SafetyTips extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Conseils de sécurité', style: merriweatherBold.copyWith(fontSize: 18)),
+        Text('Conseils de sécurité',
+            style: merriweatherBold.copyWith(fontSize: 18)),
         const SizedBox(height: 8),
         ..._getTipsForAlert(alert).map((tip) => Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('• ', style: TextStyle(fontSize: 16)),
-              Expanded(child: Text(tip, style: merriweatherNormal)),
-            ],
-          ),
-        )),
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('• ', style: TextStyle(fontSize: 16)),
+                  Expanded(child: Text(tip, style: merriweatherNormal)),
+                ],
+              ),
+            )),
       ],
     );
   }
