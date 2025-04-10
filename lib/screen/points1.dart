@@ -213,10 +213,10 @@ class _FitnessHomePageState extends State<FitnessHomePage> {
                           child: ImageSequenceAnimator(
                             "assets/walking-animtaion",
                             "frame_",
-                            1,
+                            0,  // Start from frame 0 instead of 1
                             4,
                             "png",
-                            38,
+                            38,  // Total 39 frames (0-38)
                             key: const Key("man-walking"),
                             fps: 30,
                             onReadyToPlay: onOfflineReadyToPlay,

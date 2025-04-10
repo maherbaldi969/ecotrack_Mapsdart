@@ -80,6 +80,8 @@ class _CustomBottomBarState extends State<CustomBottomBar>
               'assets/icons/analytics.svg',
               width: 32.r,
               color: tabController.index == 0 ? selectedColor : unSelectedColor,
+              allowDrawingOutsideViewBox: true,
+              excludeFromSemantics: true,
             ),
           ),
           Tab(
