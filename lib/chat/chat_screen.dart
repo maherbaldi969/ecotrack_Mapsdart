@@ -1,22 +1,68 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'settings_page.dart';
-import '../navigationetsuivi/Maps.dart'; // Assurez-vous d'importer votre fichier Maps.dart
-import 'package:google_maps_flutter/google_maps_flutter.dart'; // Importez LatLng
+import '../navigationetsuivi/Maps.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../services/language_service.dart';
+import '../screens/language_selection_screen.dart';
 
-class ChatScreen extends StatelessWidget {
+class ChatScreen extends StatefulWidget {
   final String user;
-  final List<Map<String, dynamic>> messages; // Liste des messages
-  final Function(String, String) onSendMessage; // Fonction pour envoyer un message
-  final Function(double, double) onLocationMessageTap; // Fonction pour gérer le clic sur un message de position
+  final List<Map<String, dynamic>> messages;
+  final Function(String, String) onSendMessage;
+  final Function(double, double) onLocationMessageTap;
 
-  ChatScreen({
+  const ChatScreen({
+    Key? key,
     required this.user,
     required this.messages,
     required this.onSendMessage,
-    required this.onLocationMessageTap, 
-  });
+    required this.onLocationMessageTap,
+  }) : super(key: key);
 
+  @override
+  _ChatScreenState createState() => _ChatScreenState();
+}
+
+class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
+  late LanguageService _languageService;
+  final Map<String, String> _translatedMessages = {};
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _translateAllMessages();
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _languageService = Provider.of<LanguageService>(context, listen: true);
+  }
+
+  Future<void> _translateMessage(String originalText) async {
+    if (_translatedMessages.containsKey(originalText)) return;
+    
+    final translated = await _languageService.translateText(
+      originalText,
+      _languageService.currentLanguage
+    );
+    
+    setState(() {
+      _translatedMessages[originalText] = translated;
+    });
+  }
+
+  Future<void> _translateAllMessages() async {
+    for (final message in widget.messages) {
+      if (message['message'] != null) {
+        await _translateMessage(message['message']!);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,8 +78,8 @@ class ChatScreen extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  user,
+                  Text(
+                    widget.user,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontFamily: 'Poppins',
@@ -76,9 +122,9 @@ class ChatScreen extends StatelessWidget {
           Expanded(
             child: ListView.builder(
               padding: EdgeInsets.all(10),
-              itemCount: messages.length,
+              itemCount: widget.messages.length,
               itemBuilder: (context, index) {
-                final message = messages[index];
+                final message = widget.messages[index];
                 final isMe = message['sender'] == 'Vous';
                 final isLocationMessage = message['message']?.startsWith('Position partagée:') ?? false;
 
@@ -109,11 +155,30 @@ class ChatScreen extends StatelessWidget {
                         color: isMe ? Color(0xFF80C000) : Color(0xFFEEEFF3),
                         borderRadius: BorderRadius.circular(15),
                       ),
-                      child: Text(
-                        message['message']!,
-                        style: TextStyle(
-                          color: isMe ? Colors.white : Colors.black,
-                          fontFamily: 'Poppins',
+                      child: GestureDetector(
+                        onLongPress: () => _translateMessage(message['message']!),
+                        child: Column(
+                          children: [
+                            Text(
+                              message['message']!,
+                              style: TextStyle(
+                                color: isMe ? Colors.white : Colors.black,
+                                fontFamily: 'Poppins',
+                              ),
+                            ),
+                              if (_translatedMessages.containsKey(message['message']!))
+                              Padding(
+                                padding: EdgeInsets.only(top: 4),
+                                child: Text(
+                                  _translatedMessages[message['message']!]!,
+                                  style: TextStyle(
+                                    color: isMe ? Colors.white.withOpacity(0.7) : Colors.black.withOpacity(0.7),
+                                    fontStyle: FontStyle.italic,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                     ),
@@ -160,10 +225,19 @@ class ChatScreen extends StatelessWidget {
             ),
           ),
           IconButton(
+            icon: Icon(Icons.translate, color: Color(0xFF80C000)),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => LanguageSelectionScreen(),
+              ),
+            ),
+          ),
+          IconButton(
             icon: Icon(Icons.send, color: Color(0xFF80C000)),
             onPressed: () {
               if (_controller.text.isNotEmpty) {
-                onSendMessage(_controller.text, 'Vous'); // Appeler la fonction pour envoyer un message
+                widget.onSendMessage(_controller.text, 'Vous'); // Appeler la fonction pour envoyer un message
                 _controller.clear();
               }
             },
