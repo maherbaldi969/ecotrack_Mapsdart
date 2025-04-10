@@ -15,9 +15,24 @@ class ChatListScreen extends StatefulWidget {
 class _ChatListScreenState extends State<ChatListScreen> {
   TextEditingController _searchController = TextEditingController();
   List<Map<String, dynamic>> _chats = [
-    {'name': 'Guide 1', 'image': 'images/user.png', 'isActive': true, 'hasUnread': true},
-    {'name': 'Guide 2', 'image': 'images/user.png', 'isActive': false, 'hasUnread': false},
-    {'name': 'Guide 3', 'image': 'images/user.png', 'isActive': true, 'hasUnread': false},
+    {
+      'name': 'Guide 1',
+      'image': 'images/user.png',
+      'isActive': true,
+      'hasUnread': true
+    },
+    {
+      'name': 'Guide 2',
+      'image': 'images/user.png',
+      'isActive': false,
+      'hasUnread': false
+    },
+    {
+      'name': 'Guide 3',
+      'image': 'images/user.png',
+      'isActive': true,
+      'hasUnread': false
+    },
   ];
 
   List<Map<String, dynamic>> _filteredChats = [];
@@ -32,7 +47,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
   void _filterChats() {
     String query = _searchController.text.toLowerCase();
     setState(() {
-      _filteredChats = _chats.where((chat) => chat['name'].toLowerCase().contains(query)).toList();
+      _filteredChats = _chats
+          .where((chat) => chat['name'].toLowerCase().contains(query))
+          .toList();
     });
   }
 
@@ -46,9 +63,6 @@ class _ChatListScreenState extends State<ChatListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Chats', style: GoogleFonts.merriweather(fontSize: 15 , color: Colors.white,)),
-      ),
       body: Column(
         children: [
           Padding(
@@ -89,7 +103,8 @@ class _ChatListScreenState extends State<ChatListScreen> {
     );
   }
 
-  Widget _buildChatTile(BuildContext context, String userName, String imagePath, bool isActive, bool hasUnread) {
+  Widget _buildChatTile(BuildContext context, String userName, String imagePath,
+      bool isActive, bool hasUnread) {
     return ListTile(
       leading: Stack(
         children: [
@@ -108,7 +123,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
         ],
       ),
       title: Text(userName),
-      trailing: hasUnread ? Icon(Icons.circle, color: Color(0xFF80C000), size: 10) : null,
+      trailing: hasUnread
+          ? Icon(Icons.circle, color: Color(0xFF80C000), size: 10)
+          : null,
       onTap: () {
         if (widget.isSelectingGuide) {
           Navigator.pop(context, {'name': userName, 'image': imagePath});
@@ -116,11 +133,16 @@ class _ChatListScreenState extends State<ChatListScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => ChatScreen(user: userName, messages: [], onSendMessage: (message, sender) {
-                print("Message envoyé : $message par $sender");
-              }, onLocationMessageTap: (latitude, longitude) {
-                print("Clic sur un message de position : $latitude, $longitude");
-              }),
+              builder: (context) => ChatScreen(
+                  user: userName,
+                  messages: [],
+                  onSendMessage: (message, sender) {
+                    print("Message envoyé : $message par $sender");
+                  },
+                  onLocationMessageTap: (latitude, longitude) {
+                    print(
+                        "Clic sur un message de position : $latitude, $longitude");
+                  }),
             ),
           );
         }
