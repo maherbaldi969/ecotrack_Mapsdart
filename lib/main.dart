@@ -25,12 +25,14 @@ import 'evaluation/evaluation_screen.dart';
 import 'evaluation/evaluation_service.dart';
 import 'evaluation/notification_service.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
+import 'package:ecotrack/services/language_service.dart';
 import 'supportclients/support_home.dart';
 import 'package:ecotrack/alertes_meteo/weather_alert_screen.dart';
 import 'package:ecotrack/recommandations_preferences/recommandations_screen.dart';
 import 'package:ecotrack/services/shared_preferences_service.dart';
 import 'package:ecotrack/recommandations_preferences/activity_history_service.dart';
 import 'package:ecotrack/recommandations_preferences/recommandations_service.dart';
+import 'package:ecotrack/screens/language_selection_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -51,7 +53,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => FavoritesManager()),
-        Provider(create: (context) => WeatherService()), // Ajoutez cette ligne
+        Provider(create: (context) => WeatherService()),
         Provider(
             create: (context) =>
                 AlertService(FlutterLocalNotificationsPlugin())),
@@ -62,8 +64,7 @@ void main() async {
           SharedPreferencesService(),
           ActivityHistoryService(),
         )),
-
-        // Ajoutez d'autres providers ici si nécessaire
+        ChangeNotifierProvider(create: (context) => LanguageService()),
       ],
       child: const EcoTrackApp(),
     ),
@@ -173,6 +174,7 @@ class _EcoTrackAppState extends State<EcoTrackApp> {
         '/badage': (context) => BadgeScreen(),
         '/support': (context) =>
             SupportHome(), // Nouvelle route pour le support client
+        '/language-selection': (context) => const LanguageSelectionScreen(),
         '/evaluation': (context) {
           final args = ModalRoute.of(context)?.settings.arguments
               as Map<String, dynamic>?;
@@ -337,7 +339,7 @@ class _MyHomePageState extends State<MyHomePage> {
           const Divider(),
           _buildDrawerItem(  
               Icons.notifications, "Notifications", '/Not', context),
-          _buildDrawerItem(Icons.settings, "Paramètres", '', context),
+          _buildDrawerItem(Icons.settings, "Paramètres", '/language-selection', context),
           _buildDrawerItem(Icons.history, "Historique", '/history', context),
           _buildDrawerItem(Icons.cloud, "Météo", '/meteo', context),
         ],

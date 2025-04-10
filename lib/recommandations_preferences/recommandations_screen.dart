@@ -3,6 +3,8 @@ import 'package:ecotrack/alertes_meteo/weather_style.dart';
 import 'package:ecotrack/services/shared_preferences_service.dart';
 import 'package:ecotrack/recommandations_preferences/activity_history_service.dart';
 import 'package:ecotrack/recommandations_preferences/recommandations_service.dart';
+import 'package:ecotrack/models/itinerary.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class RecommandationsScreen extends StatefulWidget {
   const RecommandationsScreen({super.key});
@@ -16,10 +18,12 @@ class _RecommandationsScreenState extends State<RecommandationsScreen> {
   final RecommandationsService _service;
   final ActivityHistoryService _history;
 
-  _RecommandationsScreenState()
-      : _service = RecommandationsService(
-            SharedPreferencesService(), ActivityHistoryService()),
-        _history = ActivityHistoryService();
+  _RecommandationsScreenState() 
+    : _service = RecommandationsService(
+        SharedPreferencesService(),
+        ActivityHistoryService()
+      ),
+      _history = ActivityHistoryService();
 
   String _activityType = 'Randonnée';
   String _duration = '1-3 jours';
@@ -39,8 +43,7 @@ class _RecommandationsScreenState extends State<RecommandationsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Vos préférences',
-                style: merriweatherBold.copyWith(fontSize: 20)),
+            Text('Vos préférences', style: merriweatherBold.copyWith(fontSize: 20)),
             const SizedBox(height: 16),
             _buildPreferencesForm(),
             const SizedBox(height: 24),
@@ -50,12 +53,10 @@ class _RecommandationsScreenState extends State<RecommandationsScreen> {
                 minimumSize: const Size(double.infinity, 50),
               ),
               onPressed: _getRecommandations,
-              child: Text('Trouver des recommandations',
-                  style: merriweatherBold.copyWith(color: blanc)),
+              child: Text('Trouver des recommandations', style: merriweatherBold.copyWith(color: blanc)),
             ),
             const SizedBox(height: 24),
-            Text('Suggestions pour vous',
-                style: merriweatherBold.copyWith(fontSize: 20)),
+            Text('Suggestions pour vous', style: merriweatherBold.copyWith(fontSize: 20)),
             const SizedBox(height: 16),
             _buildRecommandationsList(),
           ],
@@ -73,7 +74,7 @@ class _RecommandationsScreenState extends State<RecommandationsScreen> {
             value: _activityType,
             items: [
               'Randonnée',
-              'visites culturelles',
+              'visites culturelles', 
               'camping',
               'Équitation ou randonnée équestre'
             ].map((type) {
@@ -82,8 +83,7 @@ class _RecommandationsScreenState extends State<RecommandationsScreen> {
                 child: Text(type, style: merriweatherNormal),
               );
             }).toList(),
-            onChanged: (value) =>
-                setState(() => _activityType = value.toString()),
+            onChanged: (value) => setState(() => _activityType = value.toString()),
             decoration: InputDecoration(
               labelText: 'Type d\'activité',
               labelStyle: merriweatherNormal,
@@ -93,8 +93,7 @@ class _RecommandationsScreenState extends State<RecommandationsScreen> {
           const SizedBox(height: 16),
           DropdownButtonFormField(
             value: _duration,
-            items:
-                ['1-3 jours', '4-7 jours', 'Plus d\'une semaine'].map((duree) {
+            items: ['1-3 jours', '4-7 jours', 'Plus d\'une semaine'].map((duree) {
               return DropdownMenuItem(
                 value: duree,
                 child: Text(duree, style: merriweatherNormal),
@@ -151,10 +150,9 @@ class _RecommandationsScreenState extends State<RecommandationsScreen> {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator(color: vertPrimaire));
         }
-
+        
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Text('Aucune recommandation trouvée',
-              style: merriweatherNormal);
+          return const Text('Aucune recommandation trouvée', style: merriweatherNormal);
         }
 
         return ListView.builder(
@@ -184,7 +182,7 @@ class _RecommandationsScreenState extends State<RecommandationsScreen> {
       final prefs = SharedPreferencesService();
       await prefs.saveUserPreferences(
         activityType: _activityType,
-        duration: _duration,
+        duration: _duration, 
         budget: _budget,
         language: _language,
       );
@@ -194,7 +192,7 @@ class _RecommandationsScreenState extends State<RecommandationsScreen> {
 
   void _showDetails(Map<String, dynamic> item) {
     _history.recordActivity(item['id'], item['type']);
-
+    
     showModalBottomSheet(
       context: context,
       builder: (context) => Padding(
@@ -225,6 +223,20 @@ class _RecommandationsScreenState extends State<RecommandationsScreen> {
   }
 
   void _navigateToActivityDetails(Map<String, dynamic> item) {
-    // Navigation vers l'écran de détails
+    Navigator.pushNamed(
+      context,
+      '/itineraryDetail',
+      arguments: Itinerary(
+        name: item['title'],
+        distance: item['distance'] ?? 0.0,
+        difficulty: item['difficulty'] ?? 'Moyen',
+        duration: item['duration'] ?? 0,
+        altitude: item['altitude'] ?? 0.0,
+        location: LatLng(
+          item['location']?['lat'] ?? 0.0,
+          item['location']?['lng'] ?? 0.0,
+        ),
+      ),
+    );
   }
 }
