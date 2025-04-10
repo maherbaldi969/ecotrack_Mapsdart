@@ -140,11 +140,22 @@ class _ChatScreenState extends State<ChatScreen> {
                       // Créer un objet LatLng avec les coordonnées
                       final position = LatLng(latitude, longitude);
 
-                      // Naviguer vers la carte avec les coordonnées GPS
+                      // Fermer le clavier avant navigation
+                      FocusScope.of(context).unfocus();
+                      
+                      // Naviguer vers la carte avec transition personnalisée
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => MapsPage(initialPosition: position), // Utilisez initialPosition
+                        PageRouteBuilder(
+                          pageBuilder: (context, animation, secondaryAnimation) => 
+                            MapsPage(initialPosition: position),
+                          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                            return FadeTransition(
+                              opacity: animation,
+                              child: child,
+                            );
+                          },
+                          transitionDuration: Duration(milliseconds: 300),
                         ),
                       );
                     } : null,

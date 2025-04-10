@@ -252,7 +252,8 @@ class _MapsPageState extends State<MapsPage> {
             if (mounted) {
               setState(() {
                 // Then change text and fade in
-                _currentHintIndex = (_currentHintIndex + 1) % _searchHints.length;
+                _currentHintIndex =
+                    (_currentHintIndex + 1) % _searchHints.length;
               });
             }
           });
