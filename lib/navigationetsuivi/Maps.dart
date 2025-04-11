@@ -632,12 +632,37 @@ class _MapsPageState extends State<MapsPage> {
         );
       }
     }
-  }
+  } 
 
   // Fonction appelée lors de la création de la carte pour enregistrer son contrôleur
   void _onMapCreated(GoogleMapController controller) {
     setState(() {
       mapController = controller;
+      
+      final initialZoom = widget.initialPosition != null ? 15.0 : 11.0;
+      final targetPosition = widget.initialPosition ?? _center;
+      
+      // Ajouter un marqueur si position initiale fournie
+      if (widget.initialPosition != null) {
+        _markers.add(
+          Marker(
+            markerId: const MarkerId("shared_position"),
+            position: widget.initialPosition!,
+            icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+            infoWindow: const InfoWindow(title: "Position partagée"),
+          ),
+        );
+      }
+      
+      // Désactiver l'animation pour éviter le déplacement de l'écran
+      controller.moveCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: targetPosition,
+            zoom: initialZoom,
+          ),
+        ),
+      );
     });
   }
 

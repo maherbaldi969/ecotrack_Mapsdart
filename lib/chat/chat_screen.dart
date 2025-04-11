@@ -45,12 +45,10 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _translateMessage(String originalText) async {
     if (_translatedMessages.containsKey(originalText)) return;
-    
+
     final translated = await _languageService.translateText(
-      originalText,
-      _languageService.currentLanguage
-    );
-    
+        originalText, _languageService.currentLanguage);
+
     setState(() {
       _translatedMessages[originalText] = translated;
     });
@@ -70,16 +68,16 @@ class _ChatScreenState extends State<ChatScreen> {
       appBar: AppBar(
         elevation: 1,
         title: Row(
-          children: [   
-            CircleAvatar(  
+          children: [
+            CircleAvatar(
               backgroundImage: AssetImage('images/user.png'),
             ),
             SizedBox(width: 10),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                  Text(
-                    widget.user,
+                Text(
+                  widget.user,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontFamily: 'Poppins',
@@ -126,39 +124,41 @@ class _ChatScreenState extends State<ChatScreen> {
               itemBuilder: (context, index) {
                 final message = widget.messages[index];
                 final isMe = message['sender'] == 'Vous';
-                final isLocationMessage = message['message']?.startsWith('Position partagée:') ?? false;
+                final isLocationMessage =
+                    message['message']?.startsWith('Position partagée:') ??
+                        false;
 
                 return Align(
-                  alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                  alignment:
+                      isMe ? Alignment.centerRight : Alignment.centerLeft,
                   child: GestureDetector(
-                    onTap: isLocationMessage ? () {
-                      // Extraire les coordonnées GPS du message
-                      final parts = message['message']!.split(': ')[1].split(', ');
-                      final latitude = double.parse(parts[0]);
-                      final longitude = double.parse(parts[1]);
+                    onTap: isLocationMessage
+                        ? () {
+                            // Extraire les coordonnées GPS du message
+                            final parts =
+                                message['message']!.split(': ')[1].split(', ');
+                            final latitude = double.parse(parts[0]);
+                            final longitude = double.parse(parts[1]);
 
-                      // Créer un objet LatLng avec les coordonnées
-                      final position = LatLng(latitude, longitude);
+                            // Créer un objet LatLng avec les coordonnées
+                            final position = LatLng(latitude, longitude);
 
-                      // Fermer le clavier avant navigation
-                      FocusScope.of(context).unfocus();
-                      
-                      // Naviguer vers la carte avec transition personnalisée
-                      Navigator.push(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder: (context, animation, secondaryAnimation) => 
-                            MapsPage(initialPosition: position),
-                          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                            return FadeTransition(
-                              opacity: animation,
-                              child: child,
+                            // Fermer le clavier avant navigation
+                            FocusScope.of(context).unfocus();
+
+                            // Naviguer vers la carte sans animation et sans historique
+                            Navigator.pushReplacement(
+                              context,
+                              PageRouteBuilder(
+                                pageBuilder:
+                                    (context, animation, secondaryAnimation) =>
+                                        MapsPage(initialPosition: position),
+                                transitionDuration: Duration.zero,
+                                reverseTransitionDuration: Duration.zero,
+                              ),
                             );
-                          },
-                          transitionDuration: Duration(milliseconds: 300),
-                        ),
-                      );
-                    } : null,
+                          }
+                        : null,
                     child: Container(
                       margin: EdgeInsets.symmetric(vertical: 5),
                       padding: EdgeInsets.all(12),
@@ -167,7 +167,8 @@ class _ChatScreenState extends State<ChatScreen> {
                         borderRadius: BorderRadius.circular(15),
                       ),
                       child: GestureDetector(
-                        onLongPress: () => _translateMessage(message['message']!),
+                        onLongPress: () =>
+                            _translateMessage(message['message']!),
                         child: Column(
                           children: [
                             Text(
@@ -177,13 +178,16 @@ class _ChatScreenState extends State<ChatScreen> {
                                 fontFamily: 'Poppins',
                               ),
                             ),
-                              if (_translatedMessages.containsKey(message['message']!))
+                            if (_translatedMessages
+                                .containsKey(message['message']!))
                               Padding(
                                 padding: EdgeInsets.only(top: 4),
                                 child: Text(
                                   _translatedMessages[message['message']!]!,
                                   style: TextStyle(
-                                    color: isMe ? Colors.white.withOpacity(0.7) : Colors.black.withOpacity(0.7),
+                                    color: isMe
+                                        ? Colors.white.withOpacity(0.7)
+                                        : Colors.black.withOpacity(0.7),
                                     fontStyle: FontStyle.italic,
                                     fontSize: 12,
                                   ),
@@ -248,7 +252,8 @@ class _ChatScreenState extends State<ChatScreen> {
             icon: Icon(Icons.send, color: Color(0xFF80C000)),
             onPressed: () {
               if (_controller.text.isNotEmpty) {
-                widget.onSendMessage(_controller.text, 'Vous'); // Appeler la fonction pour envoyer un message
+                widget.onSendMessage(_controller.text,
+                    'Vous'); // Appeler la fonction pour envoyer un message
                 _controller.clear();
               }
             },
@@ -269,7 +274,8 @@ class _ChatScreenState extends State<ChatScreen> {
           children: [
             ListTile(
               leading: Icon(Icons.file_upload, color: Color(0xFF80C000)),
-              title: Text('Upload File', style: TextStyle(fontFamily: 'Poppins')),
+              title:
+                  Text('Upload File', style: TextStyle(fontFamily: 'Poppins')),
               onTap: () {
                 Navigator.pop(context);
                 _uploadFile();
@@ -277,7 +283,8 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             ListTile(
               leading: Icon(Icons.camera_alt, color: Colors.green),
-              title: Text('Take Picture', style: TextStyle(fontFamily: 'Poppins')),
+              title:
+                  Text('Take Picture', style: TextStyle(fontFamily: 'Poppins')),
               onTap: () {
                 Navigator.pop(context);
                 _takePicture();
@@ -285,7 +292,8 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             ListTile(
               leading: Icon(Icons.image, color: Color(0xFF80C000)),
-              title: Text('Upload Image', style: TextStyle(fontFamily: 'Poppins')),
+              title:
+                  Text('Upload Image', style: TextStyle(fontFamily: 'Poppins')),
               onTap: () {
                 Navigator.pop(context);
                 _uploadImage();
