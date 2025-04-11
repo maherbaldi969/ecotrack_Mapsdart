@@ -138,11 +138,13 @@ class _MapsPageState extends State<MapsPage> {
     try {
       // 1. Initialize notifications service
       await NotificationsService.initialize();
-      
+
       // Initialize offline maps
-      _isOfflineMapAvailable = await OfflineMapService.isMapDownloaded('current_region');
+      _isOfflineMapAvailable =
+          await OfflineMapService.isMapDownloaded('current_region');
       if (_isOfflineMapAvailable) {
-        _currentOfflineMapRegion = await OfflineMapService.getMapPath('current_region');
+        _currentOfflineMapRegion =
+            await OfflineMapService.getMapPath('current_region');
       } else if (_isOnline) {
         // Show download option in UI
         setState(() {
@@ -475,8 +477,16 @@ class _MapsPageState extends State<MapsPage> {
       "altitude": 250,
       "description": "Un superbe itinéraire longeant le littoral de Bizerte...",
       "guides_available": [
-        {"name": "Mohamed", "rating": 4.8, "languages": ["Français", "Arabe"]},
-        {"name": "Samira", "rating": 4.9, "languages": ["Anglais", "Arabe"]}
+        {
+          "name": "Mohamed",
+          "rating": 4.8,
+          "languages": ["Français", "Arabe"]
+        },
+        {
+          "name": "Samira",
+          "rating": 4.9,
+          "languages": ["Anglais", "Arabe"]
+        }
       ],
       "attractions": [
         {"name": "Phare Cap Blanc", "distance": "2.5km"},
@@ -518,7 +528,8 @@ class _MapsPageState extends State<MapsPage> {
             if (itinerary['guides_available'].isNotEmpty)
               TextButton(
                 onPressed: () async {
-                  final selectedGuide = await Navigator.push<Map<String, dynamic>>(
+                  final selectedGuide =
+                      await Navigator.push<Map<String, dynamic>>(
                     context,
                     MaterialPageRoute(
                       builder: (context) => ChatListScreen(
@@ -527,7 +538,7 @@ class _MapsPageState extends State<MapsPage> {
                       ),
                     ),
                   );
-                  
+
                   if (selectedGuide != null && mounted) {
                     await Navigator.push(
                       context,
@@ -536,7 +547,8 @@ class _MapsPageState extends State<MapsPage> {
                           user: selectedGuide['name'],
                           messages: [
                             {
-                              'message': 'Bonjour, je souhaite réserver votre service de guide',
+                              'message':
+                                  'Bonjour, je souhaite réserver votre service de guide',
                               'sender': 'Vous',
                             }
                           ],
@@ -708,28 +720,29 @@ class _MapsPageState extends State<MapsPage> {
         );
       }
     }
-  } 
+  }
 
   // Fonction appelée lors de la création de la carte pour enregistrer son contrôleur
   void _onMapCreated(GoogleMapController controller) {
     setState(() {
       mapController = controller;
-      
+
       final initialZoom = widget.initialPosition != null ? 15.0 : 11.0;
       final targetPosition = widget.initialPosition ?? _center;
-      
+
       // Ajouter un marqueur si position initiale fournie
       if (widget.initialPosition != null) {
         _markers.add(
           Marker(
             markerId: const MarkerId("shared_position"),
             position: widget.initialPosition!,
-            icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+            icon:
+                BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
             infoWindow: const InfoWindow(title: "Position partagée"),
           ),
         );
       }
-      
+
       // Désactiver l'animation pour éviter le déplacement de l'écran
       controller.moveCamera(
         CameraUpdate.newCameraPosition(
@@ -997,35 +1010,36 @@ class _MapsPageState extends State<MapsPage> {
                 "Fermer",
                 style: GoogleFonts.poppins(
                   color: Color(0xFF80C000), // Vert
-          ),
-        ),
-      ),
-      if (!_isOnline && _isOfflineMapAvailable)
-        Positioned(
-          top: 16,
-          right: 16,
-          child: Container(
-            padding: EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black26,
-                  blurRadius: 10,
-                  offset: Offset(0, 5),
                 ),
-              ],
+              ),
             ),
-            child: Row(
-              children: [
-                Icon(Icons.offline_bolt, color: Colors.orange),
-                SizedBox(width: 5),
-                Text('Mode hors-ligne', style: TextStyle(fontWeight: FontWeight.bold)),
-              ],
-            ),
-          ),
-        ),
+            if (!_isOnline && _isOfflineMapAvailable)
+              Positioned(
+                top: 16,
+                right: 16,
+                child: Container(
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 10,
+                        offset: Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.offline_bolt, color: Colors.orange),
+                      SizedBox(width: 5),
+                      Text('Mode hors-ligne',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+              ),
           ],
         );
       },
@@ -1242,15 +1256,18 @@ class _MapsPageState extends State<MapsPage> {
         title: Text('Sélectionner un guide'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
-          children: guides.map((guide) => ListTile(
-            leading: Icon(Icons.person),
-            title: Text(guide['name']),
-            subtitle: Text('${guide['rating']} ⭐ - ${guide['languages'].join(', ')}'),
-            onTap: () {
-              Navigator.pop(context);
-              _contacterGuideWrapper(guide['name']);
-            },
-          )).toList(),
+          children: guides
+              .map((guide) => ListTile(
+                    leading: Icon(Icons.person),
+                    title: Text(guide['name']),
+                    subtitle: Text(
+                        '${guide['rating']} ⭐ - ${guide['languages'].join(', ')}'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _contacterGuideWrapper(guide['name']);
+                    },
+                  ))
+              .toList(),
         ),
         actions: [
           TextButton(

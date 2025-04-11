@@ -9,7 +9,7 @@ class NotificationsService {
   static Future<void> initialize() async {
     // Initialiser timezone
     tz.initializeTimeZones();
-    
+
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
@@ -67,7 +67,7 @@ class NotificationsService {
       DateTime.now().add(delay),
       tz.local,
     );
-    
+
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
       'scheduled_notifications_channel',

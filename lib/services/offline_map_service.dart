@@ -4,19 +4,20 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 
 class OfflineMapService {
-  static Future<String?> downloadMapRegion(String regionName, String mapUrl) async {
+  static Future<String?> downloadMapRegion(
+      String regionName, String mapUrl) async {
     try {
       final dir = await getApplicationDocumentsDirectory();
       final file = File('${dir.path}/map_$regionName.zip');
-      
+
       // Create the request
       final response = await HttpClient().getUrl(Uri.parse(mapUrl));
       final request = await response.close();
-      
+
       // Write to file
       final bytes = await request.expand((b) => b).toList();
       await file.writeAsBytes(bytes);
-      
+
       return file.path;
     } catch (e) {
       debugPrint('Download error: $e');
@@ -58,10 +59,11 @@ class OfflineMapService {
   static Future<List<String>> getAvailableRegions() async {
     try {
       final dir = await getApplicationDocumentsDirectory();
-      final files = await Directory(dir.path).list()
-        .where((f) => f.path.endsWith('.zip'))
-        .map((f) => f.path)
-        .toList();
+      final files = await Directory(dir.path)
+          .list()
+          .where((f) => f.path.endsWith('.zip'))
+          .map((f) => f.path)
+          .toList();
       return files;
     } catch (e) {
       debugPrint('Region list error: $e');
@@ -82,18 +84,20 @@ class OfflineMapService {
       }
 
       final dir = await getApplicationDocumentsDirectory();
-      final filename = 'itinerary_${DateTime.now().millisecondsSinceEpoch}.json';
+      final filename =
+          'itinerary_${DateTime.now().millisecondsSinceEpoch}.json';
       final file = File('${dir.path}/$filename');
 
       // Convert to JSON and check size
       final jsonData = jsonEncode(itinerary);
-      if (jsonData.length > 1024 * 1024) { // 1MB limit
+      if (jsonData.length > 1024 * 1024) {
+        // 1MB limit
         throw Exception('Itinerary too large to save');
       }
 
       // Write file
       await file.writeAsString(jsonData);
-      
+
       debugPrint('Saved itinerary to $filename');
     } catch (e) {
       debugPrint('Save itinerary error: $e');
@@ -110,7 +114,7 @@ class OfflineMapService {
           .toList();
 
       List<Map<String, dynamic>> itineraries = [];
-      
+
       for (final file in files) {
         try {
           final content = await File(file.path).readAsString();
@@ -120,7 +124,7 @@ class OfflineMapService {
           debugPrint('Error reading itinerary file ${file.path}: $e');
         }
       }
-      
+
       return itineraries;
     } catch (e) {
       debugPrint('Error getting saved itineraries: $e');

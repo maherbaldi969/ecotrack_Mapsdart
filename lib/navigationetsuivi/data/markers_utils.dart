@@ -161,7 +161,8 @@ void showGuideDialog(Map<String, dynamic> guide, BuildContext context,
                             user: guide["nom"],
                             messages: [
                               {
-                                'message': 'Bonjour, je souhaite vous contacter',
+                                'message':
+                                    'Bonjour, je souhaite vous contacter',
                                 'sender': 'Vous',
                               }
                             ],
