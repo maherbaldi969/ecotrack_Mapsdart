@@ -167,7 +167,10 @@ class _EcoTrackAppState extends State<EcoTrackApp> {
         '/downloaded-itineraries': (context) => DownloadedItinerariesPage(),
         '/tracking': (context) => TrackingScreen(),
         '/history': (context) => HistoriqueRandonneesPage(),
-        '/guide': (context) => ChatListScreen(),
+        '/guide': (context) => ChatListScreen(
+          guides: [], // Passing empty list since we don't have guide data here
+          isSelectingGuide: false,
+        ),
         '/explore': (context) => Explore(),
         '/mapage': (context) => FitnessApp(),
         '/custom-program': (context) => PersonalisationHome(),
@@ -219,7 +222,10 @@ class _MyHomePageState extends State<MyHomePage> {
     const MyHomePageContent(title: 'EcoTrack'), // Accueil
     MapsPage(), // Carte
     Explore(), // Explore
-    ChatListScreen(), // Chat
+    ChatListScreen(
+      guides: [], // Passing empty list since we don't have guide data here
+      isSelectingGuide: false,
+    ), // Chat
     FitnessApp(), // Ma page (par exemple, les favoris)
   ];
 

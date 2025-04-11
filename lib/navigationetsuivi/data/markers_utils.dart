@@ -3,6 +3,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:geolocator/geolocator.dart';
 import '../alerts/weather_data.dart';
+import '../../chat/chat_screen.dart';
 import 'hebergements_data.dart';
 import 'guides_data.dart';
 import 'randonnees_data.dart';
@@ -77,14 +78,7 @@ void showCenteredDialog(
                       Navigator.pop(context);
                       reserverGuide(heb["nom"]);
                     },
-                    child: Text("Réserver un guide"),
-                  ),
-                  SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: () {
-                      ajouterAuxFavoris(heb);
-                    },
-                    child: Text("Ajouter aux favoris"),
+                    child: Text("Réserver un Hotel"),
                   ),
                 ],
               ),
@@ -160,7 +154,27 @@ void showGuideDialog(Map<String, dynamic> guide, BuildContext context,
                   SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () {
-                      contacterGuide(guide["nom"]);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ChatScreen(
+                            user: guide["nom"],
+                            messages: [
+                              {
+                                'message': 'Bonjour, je souhaite vous contacter',
+                                'sender': 'Vous',
+                              }
+                            ],
+                            onSendMessage: (message, sender) {
+                              // Handle message sending
+                              print("Message envoyé: $message");
+                            },
+                            onLocationMessageTap: (latitude, longitude) {
+                              // Handle location message tap
+                            },
+                          ),
+                        ),
+                      );
                     },
                     child: Text("Contacter le guide"),
                   ),
@@ -288,7 +302,8 @@ void contacterGuide(String guide, BuildContext context) {
 }
 
 // Fonctions pour les itinéraires et alertes
-void addItineraryMarker(Set<Marker> markers, LatLng bizerteItineraryLocation, BuildContext context) {
+void addItineraryMarker(Set<Marker> markers, LatLng bizerteItineraryLocation,
+    BuildContext context) {
   markers.add(
     Marker(
       markerId: const MarkerId("itinerary_bizerte"),
@@ -361,15 +376,17 @@ void showAlert(BuildContext context, String title, String message) {
   );
 }
 
-void checkDistanceToKesra(BuildContext context, Position? currentPosition, LatLng centerKesra) {
+void checkDistanceToKesra(
+    BuildContext context, Position? currentPosition, LatLng centerKesra) {
   if (currentPosition == null) return;
-  
+
   final distance = Geolocator.distanceBetween(
-    currentPosition.latitude,
-    currentPosition.longitude,
-    centerKesra.latitude,
-    centerKesra.longitude,
-  ) / 1000;
+        currentPosition.latitude,
+        currentPosition.longitude,
+        centerKesra.latitude,
+        centerKesra.longitude,
+      ) /
+      1000;
 
   if (distance >= 5 && distance <= 20) {
     showAlert(
@@ -380,7 +397,8 @@ void checkDistanceToKesra(BuildContext context, Position? currentPosition, LatLn
   }
 }
 
-Widget buildWeatherDetailRow(BuildContext context, IconData icon, String label, String value) {
+Widget buildWeatherDetailRow(
+    BuildContext context, IconData icon, String label, String value) {
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 8),
     child: Row(
@@ -405,10 +423,13 @@ void showWeatherDetails(BuildContext context, WeatherData? weather) {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Détails météorologiques', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const Text('Détails météorologiques',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 16),
-          buildWeatherDetailRow(context, Icons.thermostat, 'Température', '${weather.temperature.toStringAsFixed(1)}°C'),
-          buildWeatherDetailRow(context, Icons.water_drop, 'Humidité', '${weather.humidity}%'),
+          buildWeatherDetailRow(context, Icons.thermostat, 'Température',
+              '${weather.temperature.toStringAsFixed(1)}°C'),
+          buildWeatherDetailRow(
+              context, Icons.water_drop, 'Humidité', '${weather.humidity}%'),
         ],
       ),
     ),

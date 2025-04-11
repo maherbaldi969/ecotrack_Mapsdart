@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ecotrack/services/notifications_service.dart';
+import 'package:ecotrack/services/offline_map_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -109,9 +110,13 @@ class _MapsPageState extends State<MapsPage> {
   StreamSubscription<WeatherData>? _weatherSubscription;
   WeatherData? _currentWeather;
   bool _isOnline = true;
+  bool _isOfflineMapAvailable = false;
+  String? _currentOfflineMapRegion;
   Position? _lastPosition;
   StreamSubscription<Position>? _positionStream;
   bool _isTracking = false;
+  bool _showDownloadOption = false;
+  bool _isDownloading = false;
   // 1. Dans votre classe _MapsPageState, ajoutez ces constantes pour les catégories
   static const String _categoryAll = "Tous";
   static const String _categoryHiking = "Randonnées";
@@ -133,6 +138,17 @@ class _MapsPageState extends State<MapsPage> {
     try {
       // 1. Initialize notifications service
       await NotificationsService.initialize();
+      
+      // Initialize offline maps
+      _isOfflineMapAvailable = await OfflineMapService.isMapDownloaded('current_region');
+      if (_isOfflineMapAvailable) {
+        _currentOfflineMapRegion = await OfflineMapService.getMapPath('current_region');
+      } else if (_isOnline) {
+        // Show download option in UI
+        setState(() {
+          _showDownloadOption = true;
+        });
+      }
 
       // 2. Check and request location permissions
       final locationStatus = await Permission.locationWhenInUse.status;
@@ -457,8 +473,16 @@ class _MapsPageState extends State<MapsPage> {
       "distance": 10.5,
       "duration": "2h 30min",
       "altitude": 250,
-      "description":
-          "Un superbe itinéraire longeant le littoral de Bizerte, offrant des vues panoramiques sur la mer.",
+      "description": "Un superbe itinéraire longeant le littoral de Bizerte...",
+      "guides_available": [
+        {"name": "Mohamed", "rating": 4.8, "languages": ["Français", "Arabe"]},
+        {"name": "Samira", "rating": 4.9, "languages": ["Anglais", "Arabe"]}
+      ],
+      "attractions": [
+        {"name": "Phare Cap Blanc", "distance": "2.5km"},
+        {"name": "Plage Sidi Salem", "distance": "4km"}
+      ],
+      "save_for_offline": false
     };
 
     showDialog(
@@ -491,6 +515,55 @@ class _MapsPageState extends State<MapsPage> {
             ],
           ),
           actions: [
+            if (itinerary['guides_available'].isNotEmpty)
+              TextButton(
+                onPressed: () async {
+                  final selectedGuide = await Navigator.push<Map<String, dynamic>>(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ChatListScreen(
+                        guides: itinerary['guides_available'],
+                        isSelectingGuide: true,
+                      ),
+                    ),
+                  );
+                  
+                  if (selectedGuide != null && mounted) {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChatScreen(
+                          user: selectedGuide['name'],
+                          messages: [
+                            {
+                              'message': 'Bonjour, je souhaite réserver votre service de guide',
+                              'sender': 'Vous',
+                            }
+                          ],
+                          onSendMessage: (message, sender) {
+                            // Handle message sending
+                            print("Message envoyé: $message");
+                          },
+                          onLocationMessageTap: (latitude, longitude) {
+                            _navigateToMapWithCoordinates(latitude, longitude);
+                          },
+                        ),
+                      ),
+                    );
+                  }
+                },
+                child: const Text("Réserver un guide"),
+              ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  itinerary['save_for_offline'] = true;
+                  _saveItineraryOffline(itinerary);
+                });
+                Navigator.pop(context);
+              },
+              child: const Text("Enregistrer hors ligne"),
+            ),
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: const Text("Fermer"),
@@ -512,7 +585,10 @@ class _MapsPageState extends State<MapsPage> {
     final selectedGuide = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ChatListScreen(isSelectingGuide: true),
+        builder: (context) => ChatListScreen(
+          guides: [], // Passing empty list since we don't have guide data here
+          isSelectingGuide: true,
+        ),
       ),
     );
 
@@ -921,9 +997,35 @@ class _MapsPageState extends State<MapsPage> {
                 "Fermer",
                 style: GoogleFonts.poppins(
                   color: Color(0xFF80C000), // Vert
+          ),
+        ),
+      ),
+      if (!_isOnline && _isOfflineMapAvailable)
+        Positioned(
+          top: 16,
+          right: 16,
+          child: Container(
+            padding: EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 10,
+                  offset: Offset(0, 5),
                 ),
-              ),
+              ],
             ),
+            child: Row(
+              children: [
+                Icon(Icons.offline_bolt, color: Colors.orange),
+                SizedBox(width: 5),
+                Text('Mode hors-ligne', style: TextStyle(fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ),
+        ),
           ],
         );
       },
@@ -1133,6 +1235,42 @@ class _MapsPageState extends State<MapsPage> {
 
   //fonction en Dart qui récupère les informations météo
   // classe danger
+  void _showGuideSelection(List<dynamic> guides) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Sélectionner un guide'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: guides.map((guide) => ListTile(
+            leading: Icon(Icons.person),
+            title: Text(guide['name']),
+            subtitle: Text('${guide['rating']} ⭐ - ${guide['languages'].join(', ')}'),
+            onTap: () {
+              Navigator.pop(context);
+              _contacterGuideWrapper(guide['name']);
+            },
+          )).toList(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Annuler'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _saveItineraryOffline(Map<String, dynamic> itinerary) async {
+    try {
+      await OfflineMapService.saveItinerary(itinerary);
+      _showSnackBar('Itinéraire enregistré pour consultation hors ligne');
+    } catch (e) {
+      _showSnackBar('Erreur lors de l\'enregistrement: ${e.toString()}');
+    }
+  }
+
   void _navigateToReportDangerPage() {
     Navigator.push(
       context,
@@ -1250,6 +1388,16 @@ class _MapsPageState extends State<MapsPage> {
                   polylines: _polylines,
                   myLocationButtonEnabled: false,
                   onTap: _onMapTapped,
+                  onCameraMoveStarted: () {
+                    if (!_isOnline && !_isOfflineMapAvailable) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Mode hors-ligne - zone limitée'),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  },
                 ),
 
                 // Barre d'alerte météo

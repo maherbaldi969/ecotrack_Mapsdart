@@ -3,9 +3,13 @@ import 'chat_screen.dart';
 import 'createGroup.dart';
 
 class ChatListScreen extends StatefulWidget {
+  final List<dynamic> guides; // Add this line
   final bool isSelectingGuide;
 
-  ChatListScreen({this.isSelectingGuide = false});
+  ChatListScreen({
+    required this.guides, // Update constructor to accept guides
+    this.isSelectingGuide = false,
+  });
 
   @override
   _ChatListScreenState createState() => _ChatListScreenState();
@@ -168,4 +172,4 @@ class _ChatListScreenState extends State<ChatListScreen> {
       ),
     );
   }
-}
+} 

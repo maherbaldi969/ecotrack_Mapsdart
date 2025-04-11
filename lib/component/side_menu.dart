@@ -119,7 +119,10 @@ class _SideMenuState extends State<SideMenu> {
                             if (menuItems[index].title == "Chat liste") {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (context) => ChatListScreen()),
+                                MaterialPageRoute(builder: (context) => ChatListScreen(
+                                  guides: [], // Passing empty list since we don't have guide data here
+                                  isSelectingGuide: false,
+                                )),
                               );
                             }
                           },

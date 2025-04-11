@@ -205,7 +205,10 @@ class CustomMenu extends StatelessWidget {
                 Navigator.of(context).pop();
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => ChatListScreen()),
+                  MaterialPageRoute(builder: (context) => ChatListScreen(
+                    guides: [], // Passing empty list since we don't have guide data here
+                    isSelectingGuide: false,
+                  )),
                 );
               },
               child: const Text(
