@@ -13,6 +13,7 @@ class ChatListScreen extends StatefulWidget {
 
 class _ChatListScreenState extends State<ChatListScreen> {
   TextEditingController _searchController = TextEditingController();
+  ScrollController _scrollController = ScrollController();
   List<Map<String, dynamic>> _chats = [
     {
       'name': 'Guide 1',
@@ -43,6 +44,13 @@ class _ChatListScreenState extends State<ChatListScreen> {
     _searchController.addListener(_filterChats);
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   void _filterChats() {
     String query = _searchController.text.toLowerCase();
     setState(() {
@@ -62,37 +70,45 @@ class _ChatListScreenState extends State<ChatListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Rechercher',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25.0),
+      appBar: AppBar(
+        title: Text('Sélectionner un guide'),
+        backgroundColor: Color(0xFF80C000),
+      ),
+      body: SingleChildScrollView(
+        controller: _scrollController,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Rechercher un guide',
+                  prefixIcon: Icon(Icons.search),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(25.0),
+                  ),
                 ),
               ),
             ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: _filteredChats.length,
-              itemBuilder: (context, index) {
-                var chat = _filteredChats[index];
-                return _buildChatTile(
-                  context,
-                  chat['name'],
-                  chat['image'],
-                  chat['isActive'],
-                  chat['hasUnread'],
-                );
-              },
+            Container(
+              height: MediaQuery.of(context).size.height * 0.7,
+              child: ListView.builder(
+                itemCount: _filteredChats.length,
+                itemBuilder: (context, index) {
+                  var chat = _filteredChats[index];
+                  return _buildChatTile(
+                    context,
+                    chat['name'],
+                    chat['image'],
+                    chat['isActive'],
+                    chat['hasUnread'],
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showUserOptions(context),
@@ -104,35 +120,37 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
   Widget _buildChatTile(BuildContext context, String userName, String imagePath,
       bool isActive, bool hasUnread) {
-    return ListTile(
-      leading: Stack(
-        children: [
-          CircleAvatar(
-            backgroundImage: AssetImage(imagePath),
-          ),
-          if (isActive)
-            Positioned(
-              right: 0,
-              bottom: 0,
-              child: CircleAvatar(
-                radius: 6,
-                backgroundColor: Color(0xFF80C000),
-              ),
+    return Card(
+      margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: ListTile(
+        leading: Stack(
+          children: [
+            CircleAvatar(
+              backgroundImage: AssetImage(imagePath),
             ),
-        ],
-      ),
-      title: Text(userName),
-      trailing: hasUnread
-          ? Icon(Icons.circle, color: Color(0xFF80C000), size: 10)
-          : null,
-      onTap: () {
-        if (widget.isSelectingGuide) {
-          Navigator.pop(context, {'name': userName, 'image': imagePath});
-        } else {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ChatScreen(
+            if (isActive)
+              Positioned(
+                right: 0,
+                bottom: 0,
+                child: CircleAvatar(
+                  radius: 6,
+                  backgroundColor: Color(0xFF80C000),
+                ),
+              ),
+          ],
+        ),
+        title: Text(userName),
+        trailing: hasUnread
+            ? Icon(Icons.circle, color: Color(0xFF80C000), size: 10)
+            : null,
+        onTap: () {
+          if (widget.isSelectingGuide) {
+            Navigator.pop(context, {'name': userName, 'image': imagePath});
+          } else {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ChatScreen(
                   user: userName,
                   messages: [],
                   onSendMessage: (message, sender) {
@@ -141,11 +159,13 @@ class _ChatListScreenState extends State<ChatListScreen> {
                   onLocationMessageTap: (latitude, longitude) {
                     print(
                         "Clic sur un message de position : $latitude, $longitude");
-                  }),
-            ),
-          );
-        }
-      },
+                  },
+                ),
+              ),
+            );
+          }
+        },
+      ),
     );
   }
 }
