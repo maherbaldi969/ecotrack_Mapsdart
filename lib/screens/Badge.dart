@@ -1,12 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
+class UserLevel {
+  final String name;
+  final int requiredBadges;
+  final List<String> benefits;
+
+  UserLevel({
+    required this.name,
+    required this.requiredBadges,
+    required this.benefits,
+  });
+}
+
 class Badge {
   final String name;
   final String icon;
   final String description;
   final bool isEarned;
   final String reward;
+  final int levelPoints;
 
   Badge({
     required this.name,
@@ -14,8 +27,27 @@ class Badge {
     required this.description,
     required this.isEarned,
     required this.reward,
+    this.levelPoints = 1,
   });
-}  
+}
+
+final List<UserLevel> userLevels = [
+  UserLevel(
+    name: "Débutant",
+    requiredBadges: 1,
+    benefits: ["Accès aux randonnées faciles"],
+  ),
+  UserLevel(
+    name: "Intermédiaire", 
+    requiredBadges: 3,
+    benefits: ["10% de réduction sur l'équipement"],
+  ),
+  UserLevel(
+    name: "Expert en randonnée",
+    requiredBadges: 5,
+    benefits: ["Accès VIP aux événements", "Guide personnel offert"],
+  ),
+];
 
 List<Badge> badges = [
   Badge(
@@ -24,13 +56,15 @@ List<Badge> badges = [
     description: "Badge obtenu après votre première randonnée !",
     isEarned: true,
     reward: "10% de réduction sur votre prochaine réservation",
+    levelPoints: 1,
   ),
   Badge(
-    name: "Explorateur culturel",
+    name: "Explorateur culturel", 
     icon: "images/prog2.jpg",
     description: "Visitez 5 sites culturels pour débloquer ce badge.",
     isEarned: false,
     reward: "Accès exclusif à des événements culturels",
+    levelPoints: 1,
   ),
   Badge(
     name: "Aventurier du Nord-Ouest",
@@ -38,6 +72,7 @@ List<Badge> badges = [
     description: "Participez à 3 randonnées en montagne.",
     isEarned: true,
     reward: "Réduction de 15% sur votre prochaine aventure",
+    levelPoints: 1,
   ),
 ];
 
@@ -85,12 +120,17 @@ class BadgeScreen extends StatelessWidget {
                 ),
                 onTap: badge.isEarned
                     ? () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => BadgeDetailScreen(badge),
-                    ),
-                  );
+                      // Calculer le total des points de niveau
+                      final totalPoints = badges
+                          .where((b) => b.isEarned)
+                          .fold(0, (sum, b) => sum + b.levelPoints);
+                      
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => BadgeDetailScreen(badge, totalPoints: totalPoints),
+                        ),
+                      );
                 }
                     : null,
               ),
@@ -103,8 +143,9 @@ class BadgeScreen extends StatelessWidget {
 }
 class BadgeDetailScreen extends StatelessWidget {
   final Badge badge;
+  final int totalPoints;
 
-  const BadgeDetailScreen(this.badge, {super.key});
+  const BadgeDetailScreen(this.badge, {required this.totalPoints, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -139,6 +180,34 @@ class BadgeDetailScreen extends StatelessWidget {
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(height: 20),
+                  
+                  // Afficher les avantages du niveau actuel
+                  Column(
+                    children: [
+                      for (final level in userLevels)
+                        if (totalPoints >= level.requiredBadges)
+                          Column(
+                            children: [
+                              Text(
+                                "Niveau ${level.name}",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF80C000),
+                                ),
+                              ),
+                              SizedBox(height: 10),
+                              for (final benefit in level.benefits)
+                                Text(
+                                  "✓ $benefit",
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                              SizedBox(height: 20),
+                            ],
+                          ),
+                    ],
+                  ),
+                  
                   ElevatedButton.icon(
                     onPressed: () {
                       final String text = 'Je viens de gagner le badge ${badge.name} sur EcoTrack! ${badge.reward}';
