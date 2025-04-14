@@ -81,6 +81,7 @@ dependencies:
   easy_localization: ^3.0.2
   flutter_downloader: ^1.10.2
   syncfusion_flutter_calendar: ^23.1.40
+  record: ^4.0.0
 
 
 

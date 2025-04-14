@@ -1,14 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'settings_page.dart';
-import '../navigationetsuivi/Maps.dart';
-import '../services/language_service.dart';
-import '../screens/language_selection_screen.dart';
-
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:record/record.dart';  // Added import for record package
 import 'settings_page.dart';
 import '../navigationetsuivi/Maps.dart';
 import '../services/language_service.dart';
@@ -34,9 +27,14 @@ class _ChatScreenState extends State<ChatScreen> {
   late LanguageService _languageService;
   final Map<String, String> _translatedMessages = {};
 
+  final Record _record = Record();  // Record instance added
+  bool _isRecording = false;       // Recording state
+
   @override
   void initState() {
     super.initState();
+    final chatProvider = Provider.of<ChatProvider>(context, listen: false);
+    chatProvider.fetchMessages();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _translateAllMessages();
     });
@@ -68,6 +66,40 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  Future<void> _startRecording() async {
+    bool hasPermission = await _record.hasPermission();
+    if (!hasPermission) {
+      print("Recording permission denied");
+      return;
+    }
+    if (_isRecording) return;
+
+    try {
+      await _record.start();
+      setState(() {
+        _isRecording = true;
+      });
+      print("Recording started");
+    } catch (e) {
+      print("Error starting recording: $e");
+    }
+  }
+
+  Future<void> _stopRecording() async {
+    if (!_isRecording) return;
+
+    try {
+      final path = await _record.stop();
+      setState(() {
+        _isRecording = false;
+      });
+      print("Recording stopped, file saved at: $path");
+      // You can add code here to handle the recorded file path
+    } catch (e) {
+      print("Error stopping recording: $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final chatProvider = Provider.of<ChatProvider>(context);
@@ -94,7 +126,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   "Active now",
                   style: TextStyle(
                     fontSize: 12,
-                    color: Color(0xFF80C000),
+                    color: Color.fromARGB(255, 29, 0, 192),
                     fontFamily: 'Poppins',
                   ),
                 ),
@@ -129,7 +161,7 @@ class _ChatScreenState extends State<ChatScreen> {
               padding: EdgeInsets.all(10),
               itemCount: chatProvider.messages.length,
               itemBuilder: (context, index) {
-                final message = chatProvider.messages[index];
+                final message = chatProvider.messages[chatProvider.messages.length - 1 - index];
                 final isMe = message['expediteur_id'] == 1; // Assuming current user id is 1
                 final isLocationMessage =
                     message['contenu']?.startsWith('Position partagée:') ?? false;
@@ -222,9 +254,16 @@ class _ChatScreenState extends State<ChatScreen> {
             },
           ),
           IconButton(
-            icon: Icon(Icons.mic, color: Colors.grey.shade700),
+            icon: Icon(
+              Icons.mic,
+              color: _isRecording ? Colors.red : Colors.grey.shade700,
+            ),
             onPressed: () {
-              _startRecording();
+              if (_isRecording) {
+                _stopRecording();
+              } else {
+                _startRecording();
+              }
             },
           ),
           Expanded(
@@ -316,9 +355,5 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _uploadImage() async {
     print("🖼️ Image selected:");
-  }
-
-  void _startRecording() {
-    print("🎤 Recording started...");
-  }
+}
 }
