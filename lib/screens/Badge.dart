@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:share_plus/share_plus.dart';
 class Badge {
   final String name;
   final String icon;
@@ -14,7 +15,7 @@ class Badge {
     required this.isEarned,
     required this.reward,
   });
-}
+}  
 
 List<Badge> badges = [
   Badge(
@@ -140,7 +141,22 @@ class BadgeDetailScreen extends StatelessWidget {
                   SizedBox(height: 20),
                   ElevatedButton.icon(
                     onPressed: () {
-                      // Logic for sharing the badge (to be implemented)
+                      final String text = 'Je viens de gagner le badge ${badge.name} sur EcoTrack! ${badge.reward}';
+                      
+                      // Utiliser un délai pour éviter le déplacement de l'AppBar
+                      Future.delayed(Duration.zero, () async {
+                        await Share.share(
+                          text,
+                          subject: 'Mon badge EcoTrack',
+                        );
+                      });
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Préparation du partage...'),
+                          duration: Duration(seconds: 1),
+                        ),
+                      );
                     },
                     icon: Icon(Icons.share),
                     label: Text("Partager sur les réseaux"),

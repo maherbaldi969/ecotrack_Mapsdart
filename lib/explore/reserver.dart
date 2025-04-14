@@ -32,7 +32,10 @@ class _ReservationPageState extends State<ReservationPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Réservation",
-            style: GoogleFonts.merriweather(fontSize: 18 , color: Colors.white,)),
+            style: GoogleFonts.merriweather(
+              fontSize: 18,
+              color: Colors.white,
+            )),
         backgroundColor: Color(0xFF80C000),
         foregroundColor: Colors.white,
       ),
@@ -77,7 +80,8 @@ class _ReservationPageState extends State<ReservationPage> {
                 Text("Informations personnelles", style: _sectionTitleStyle()),
                 _buildTextField("Nom", nameController),
                 _buildTextField("Contact", contactController),
-                _buildTextField("Nombre de participants", participantsController),
+                _buildTextField(
+                    "Nombre de participants", participantsController),
                 SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: () {
@@ -94,7 +98,8 @@ class _ReservationPageState extends State<ReservationPage> {
                     ),
                   ),
                   child: Center(
-                    child: Text("Suivant", style: TextStyle(fontSize: 18, color: Colors.white)),
+                    child: Text("Suivant",
+                        style: TextStyle(fontSize: 18, color: Colors.white)),
                   ),
                 ),
               ],
@@ -132,7 +137,6 @@ class _ReservationPageState extends State<ReservationPage> {
   }
 }
 
-
 class PaymentPage extends StatefulWidget {
   @override
   _PaymentPageState createState() => _PaymentPageState();
@@ -146,7 +150,10 @@ class _PaymentPageState extends State<PaymentPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Paiement",
-            style: GoogleFonts.merriweather(fontSize: 18 , color: Colors.white,)),
+            style: GoogleFonts.merriweather(
+              fontSize: 18,
+              color: Colors.white,
+            )),
         backgroundColor: Color(0xFF80C000),
         foregroundColor: Colors.white,
       ),
@@ -170,7 +177,10 @@ class _PaymentPageState extends State<PaymentPage> {
             children: [
               Text(
                 "Choisir un mode de paiement",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Merriweather'),
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Merriweather'),
               ),
               SizedBox(height: 10),
               _buildRadioButton("Carte bancaire"),
@@ -194,7 +204,8 @@ class _PaymentPageState extends State<PaymentPage> {
                   ),
                 ),
                 child: Center(
-                  child: Text("Payer et confirmer", style: TextStyle(fontSize: 18, color: Colors.white)),
+                  child: Text("Payer et confirmer",
+                      style: TextStyle(fontSize: 18, color: Colors.white)),
                 ),
               ),
             ],
@@ -227,7 +238,10 @@ class ConfirmationPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text("Confirmation",
-            style: GoogleFonts.merriweather(fontSize: 18 , color: Colors.white,)),
+            style: GoogleFonts.merriweather(
+              fontSize: 18,
+              color: Colors.white,
+            )),
         backgroundColor: Color(0xFF80C000),
         foregroundColor: Colors.white,
       ),
@@ -249,7 +263,11 @@ class ConfirmationPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text("Réservation Confirmée !", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Merriweather')),
+              Text("Réservation Confirmée !",
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Merriweather')),
               SizedBox(height: 20),
               ElevatedButton.icon(
                 onPressed: () {

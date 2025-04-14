@@ -60,10 +60,11 @@ void main() async {
         Provider(
             create: (context) => AlertService(flutterLocalNotificationsPlugin)),
         Provider(create: (context) => EvaluationService()),
-        Provider(create: (context) => RecommandationsService(
-          SharedPreferencesService(),
-          ActivityHistoryService(),
-        )),
+        Provider(
+            create: (context) => RecommandationsService(
+                  SharedPreferencesService(),
+                  ActivityHistoryService(),
+                )),
         ChangeNotifierProvider(create: (context) => LanguageService()),
       ],
       child: const EcoTrackApp(),
@@ -168,9 +169,9 @@ class _EcoTrackAppState extends State<EcoTrackApp> {
         '/tracking': (context) => TrackingScreen(),
         '/history': (context) => HistoriqueRandonneesPage(),
         '/guide': (context) => ChatListScreen(
-          guides: [], // Passing empty list since we don't have guide data here
-          isSelectingGuide: false,
-        ),
+              guides: [], // Passing empty list since we don't have guide data here
+              isSelectingGuide: false,
+            ),
         '/explore': (context) => Explore(),
         '/mapage': (context) => FitnessApp(),
         '/custom-program': (context) => PersonalisationHome(),
@@ -343,9 +344,10 @@ class _MyHomePageState extends State<MyHomePage> {
           _buildDrawerItem(
               Icons.handshake, "Recommandations", '/recommandations', context),
           const Divider(),
-          _buildDrawerItem(  
+          _buildDrawerItem(
               Icons.notifications, "Notifications", '/Not', context),
-          _buildDrawerItem(Icons.settings, "Paramètres", '/language-selection', context),
+          _buildDrawerItem(
+              Icons.settings, "Paramètres", '/language-selection', context),
           _buildDrawerItem(Icons.history, "Historique", '/history', context),
           _buildDrawerItem(Icons.cloud, "Météo", '/meteo', context),
         ],
