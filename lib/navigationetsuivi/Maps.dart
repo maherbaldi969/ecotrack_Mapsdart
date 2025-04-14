@@ -540,21 +540,17 @@ class _MapsPageState extends State<MapsPage> {
                   );
 
                   if (selectedGuide != null && mounted) {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ChatScreen(
-                            user: selectedGuide['name'],
-                            messages: [], // TODO: Passer la liste réelle des messages
-                            onSendMessage: (message, sender) {
-                              print("Message envoyé: $message");
-                            },
-                            onLocationMessageTap: (latitude, longitude) {
-                              _navigateToMapWithCoordinates(latitude, longitude);
-                            },
-                          ),
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChatScreen(
+                          user: selectedGuide['name'],
+                          onLocationMessageTap: (latitude, longitude) {
+                            _navigateToMapWithCoordinates(latitude, longitude);
+                          },
                         ),
-                      );
+                      ),
+                    );
                   }
                 },
                 child: const Text("Réserver un guide"),
@@ -607,11 +603,6 @@ class _MapsPageState extends State<MapsPage> {
         MaterialPageRoute(
           builder: (context) => ChatScreen(
             user: selectedGuide['name'],
-            messages: [], // TODO: Passer la liste réelle des messages
-            onSendMessage: (message, sender) {
-              // Gérer l'envoi du message ici
-              print("Message envoyé : $message par $sender");
-            },
             onLocationMessageTap: (latitude, longitude) {
               _navigateToMapWithCoordinates(latitude, longitude);
             },
@@ -623,13 +614,6 @@ class _MapsPageState extends State<MapsPage> {
 
 // Fonction pour envoyer la position au guide
   void _sendPositionToGuide(Map<String, dynamic> guide, Position position) {
-    final message = {
-      'type': 'location',
-      'latitude': position.latitude,
-      'longitude': position.longitude,
-      'timestamp': DateTime.now().toIso8601String(),
-    };
-
     _showSnackBar("Position partagée avec ${guide['name']}");
   }
 

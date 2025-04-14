@@ -6,17 +6,22 @@ import '../navigationetsuivi/Maps.dart';
 import '../services/language_service.dart';
 import '../screens/language_selection_screen.dart';
 
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'settings_page.dart';
+import '../navigationetsuivi/Maps.dart';
+import '../services/language_service.dart';
+import '../screens/language_selection_screen.dart';
+import 'chat_provider.dart';
+
 class ChatScreen extends StatefulWidget {
   final String user;
-  final List<Map<String, dynamic>> messages;
-  final Function(String, String) onSendMessage;
   final Function(double, double) onLocationMessageTap;
 
   const ChatScreen({
     Key? key,
     required this.user,
-    required this.messages,
-    required this.onSendMessage,
     required this.onLocationMessageTap,
   }) : super(key: key);
 
@@ -55,15 +60,17 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _translateAllMessages() async {
-    for (final message in widget.messages) {
-      if (message['message'] != null) {
-        await _translateMessage(message['message']!);
+    final chatProvider = Provider.of<ChatProvider>(context, listen: false);
+    for (final message in chatProvider.messages) {
+      if (message['contenu'] != null) {
+        await _translateMessage(message['contenu']!);
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final chatProvider = Provider.of<ChatProvider>(context);
     return Scaffold(
       appBar: AppBar(
         elevation: 1,
@@ -120,13 +127,12 @@ class _ChatScreenState extends State<ChatScreen> {
           Expanded(
             child: ListView.builder(
               padding: EdgeInsets.all(10),
-              itemCount: widget.messages.length,
+              itemCount: chatProvider.messages.length,
               itemBuilder: (context, index) {
-                final message = widget.messages[index];
-                final isMe = message['sender'] == 'Vous';
+                final message = chatProvider.messages[index];
+                final isMe = message['expediteur_id'] == 1; // Assuming current user id is 1
                 final isLocationMessage =
-                    message['message']?.startsWith('Position partagée:') ??
-                        false;
+                    message['contenu']?.startsWith('Position partagée:') ?? false;
 
                 return Align(
                   alignment:
@@ -134,19 +140,15 @@ class _ChatScreenState extends State<ChatScreen> {
                   child: GestureDetector(
                     onTap: isLocationMessage
                         ? () {
-                            // Extraire les coordonnées GPS du message
                             final parts =
-                                message['message']!.split(': ')[1].split(', ');
+                                message['contenu']!.split(': ')[1].split(', ');
                             final latitude = double.parse(parts[0]);
                             final longitude = double.parse(parts[1]);
 
-                            // Créer un objet LatLng avec les coordonnées
                             final position = LatLng(latitude, longitude);
 
-                            // Fermer le clavier avant navigation
                             FocusScope.of(context).unfocus();
 
-                            // Naviguer vers la carte sans animation et sans historique
                             Navigator.pushReplacement(
                               context,
                               PageRouteBuilder(
@@ -168,22 +170,22 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                       child: GestureDetector(
                         onLongPress: () =>
-                            _translateMessage(message['message']!),
+                            _translateMessage(message['contenu']!),
                         child: Column(
                           children: [
                             Text(
-                              message['message']!,
+                              message['contenu']!,
                               style: TextStyle(
                                 color: isMe ? Colors.white : Colors.black,
                                 fontFamily: 'Poppins',
                               ),
                             ),
                             if (_translatedMessages
-                                .containsKey(message['message']!))
+                                .containsKey(message['contenu']!))
                               Padding(
                                 padding: EdgeInsets.only(top: 4),
                                 child: Text(
-                                  _translatedMessages[message['message']!]!,
+                                  _translatedMessages[message['contenu']!]!,
                                   style: TextStyle(
                                     color: isMe
                                         ? Colors.white.withOpacity(0.7)
@@ -202,13 +204,13 @@ class _ChatScreenState extends State<ChatScreen> {
               },
             ),
           ),
-          _buildMessageInput(context),
+          _buildMessageInput(context, chatProvider),
         ],
       ),
     );
   }
 
-  Widget _buildMessageInput(BuildContext context) {
+  Widget _buildMessageInput(BuildContext context, ChatProvider chatProvider) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
       child: Row(
@@ -252,8 +254,7 @@ class _ChatScreenState extends State<ChatScreen> {
             icon: Icon(Icons.send, color: Color(0xFF80C000)),
             onPressed: () {
               if (_controller.text.isNotEmpty) {
-                widget.onSendMessage(_controller.text,
-                    'Vous'); // Appeler la fonction pour envoyer un message
+                chatProvider.sendMessage(_controller.text, 1); // Assuming current user id is 1
                 _controller.clear();
               }
             },
@@ -274,7 +275,8 @@ class _ChatScreenState extends State<ChatScreen> {
           children: [
             ListTile(
               leading: Icon(Icons.file_upload, color: Color(0xFF80C000)),
-              title: Text('Upload File', style: TextStyle(fontFamily: 'Poppins')),
+              title:
+                  Text('Upload File', style: TextStyle(fontFamily: 'Poppins')),
               onTap: () {
                 Navigator.pop(context);
                 _uploadFile();
@@ -282,7 +284,8 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             ListTile(
               leading: Icon(Icons.camera_alt, color: Colors.green),
-              title: Text('Take Picture', style: TextStyle(fontFamily: 'Poppins')),
+              title:
+                  Text('Take Picture', style: TextStyle(fontFamily: 'Poppins')),
               onTap: () {
                 Navigator.pop(context);
                 _takePicture();
@@ -290,7 +293,8 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             ListTile(
               leading: Icon(Icons.image, color: Color(0xFF80C000)),
-              title: Text('Upload Image', style: TextStyle(fontFamily: 'Poppins')),
+              title:
+                  Text('Upload Image', style: TextStyle(fontFamily: 'Poppins')),
               onTap: () {
                 Navigator.pop(context);
                 _uploadImage();

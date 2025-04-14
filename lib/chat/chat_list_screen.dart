@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'chat_screen.dart';
 import 'createGroup.dart';
+import 'chat_provider.dart';
 
 class ChatListScreen extends StatefulWidget {
   final List<dynamic> guides; // Add this line
@@ -73,6 +75,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final chatProvider = Provider.of<ChatProvider>(context);
+    final currentUserId = 1; // Assuming current user id is 1, adjust as needed
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Sélectionner un guide'),
@@ -151,15 +156,14 @@ class _ChatListScreenState extends State<ChatListScreen> {
           if (widget.isSelectingGuide) {
             Navigator.pop(context, {'name': userName, 'image': imagePath});
           } else {
+            final chatProvider = Provider.of<ChatProvider>(context, listen: false);
+            final currentUserId = 1; // Adjust as needed
+
             Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => ChatScreen(
                   user: userName,
-                  messages: [], // TODO: Passer la liste réelle des messages
-                  onSendMessage: (message, sender) {
-                    print("Message envoyé : $message par $sender");
-                  },
                   onLocationMessageTap: (latitude, longitude) {
                     print("Clic sur un message de position : $latitude, $longitude");
                   },
@@ -171,4 +175,4 @@ class _ChatListScreenState extends State<ChatListScreen> {
       ),
     );
   }
-} 
+}

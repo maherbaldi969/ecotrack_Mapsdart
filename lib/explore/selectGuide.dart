@@ -79,8 +79,6 @@ class SelectGuidePage extends StatelessWidget {
                             MaterialPageRoute(
                               builder: (context) => ChatScreen(
                                 user: guide.nom,
-                                messages: [], // TODO: Pass actual messages list
-                                onSendMessage: (message, sender) {},
                                 onLocationMessageTap: (lat, lng) {},
                               ),
                             ),
