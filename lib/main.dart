@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'chat/chat_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'Partenaire/partner_offers_screen.dart';
 import 'screens/itinerary_list_screen.dart';
@@ -66,6 +67,7 @@ void main() async {
                   ActivityHistoryService(),
                 )),
         ChangeNotifierProvider(create: (context) => LanguageService()),
+        ChangeNotifierProvider(create: (context) => ChatProvider()),
       ],
       child: const EcoTrackApp(),
     ),

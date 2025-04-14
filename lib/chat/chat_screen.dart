@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'settings_page.dart';
 import '../navigationetsuivi/Maps.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../services/language_service.dart';
 import '../screens/language_selection_screen.dart';
 
@@ -274,8 +274,7 @@ class _ChatScreenState extends State<ChatScreen> {
           children: [
             ListTile(
               leading: Icon(Icons.file_upload, color: Color(0xFF80C000)),
-              title:
-                  Text('Upload File', style: TextStyle(fontFamily: 'Poppins')),
+              title: Text('Upload File', style: TextStyle(fontFamily: 'Poppins')),
               onTap: () {
                 Navigator.pop(context);
                 _uploadFile();
@@ -283,8 +282,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             ListTile(
               leading: Icon(Icons.camera_alt, color: Colors.green),
-              title:
-                  Text('Take Picture', style: TextStyle(fontFamily: 'Poppins')),
+              title: Text('Take Picture', style: TextStyle(fontFamily: 'Poppins')),
               onTap: () {
                 Navigator.pop(context);
                 _takePicture();
@@ -292,8 +290,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             ListTile(
               leading: Icon(Icons.image, color: Color(0xFF80C000)),
-              title:
-                  Text('Upload Image', style: TextStyle(fontFamily: 'Poppins')),
+              title: Text('Upload Image', style: TextStyle(fontFamily: 'Poppins')),
               onTap: () {
                 Navigator.pop(context);
                 _uploadImage();

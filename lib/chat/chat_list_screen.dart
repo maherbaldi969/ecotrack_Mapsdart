@@ -156,13 +156,12 @@ class _ChatListScreenState extends State<ChatListScreen> {
               MaterialPageRoute(
                 builder: (context) => ChatScreen(
                   user: userName,
-                  messages: [],
+                  messages: [], // TODO: Passer la liste réelle des messages
                   onSendMessage: (message, sender) {
                     print("Message envoyé : $message par $sender");
                   },
                   onLocationMessageTap: (latitude, longitude) {
-                    print(
-                        "Clic sur un message de position : $latitude, $longitude");
+                    print("Clic sur un message de position : $latitude, $longitude");
                   },
                 ),
               ),

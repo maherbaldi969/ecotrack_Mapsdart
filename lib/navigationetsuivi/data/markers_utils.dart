@@ -159,13 +159,7 @@ void showGuideDialog(Map<String, dynamic> guide, BuildContext context,
                         MaterialPageRoute(
                           builder: (context) => ChatScreen(
                             user: guide["nom"],
-                            messages: [
-                              {
-                                'message':
-                                    'Bonjour, je souhaite vous contacter',
-                                'sender': 'Vous',
-                              }
-                            ],
+                            messages: [], // TODO: Passer la liste réelle des messages
                             onSendMessage: (message, sender) {
                               // Handle message sending
                               print("Message envoyé: $message");

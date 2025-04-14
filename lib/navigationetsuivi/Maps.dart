@@ -540,28 +540,21 @@ class _MapsPageState extends State<MapsPage> {
                   );
 
                   if (selectedGuide != null && mounted) {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ChatScreen(
-                          user: selectedGuide['name'],
-                          messages: [
-                            {
-                              'message':
-                                  'Bonjour, je souhaite réserver votre service de guide',
-                              'sender': 'Vous',
-                            }
-                          ],
-                          onSendMessage: (message, sender) {
-                            // Handle message sending
-                            print("Message envoyé: $message");
-                          },
-                          onLocationMessageTap: (latitude, longitude) {
-                            _navigateToMapWithCoordinates(latitude, longitude);
-                          },
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ChatScreen(
+                            user: selectedGuide['name'],
+                            messages: [], // TODO: Passer la liste réelle des messages
+                            onSendMessage: (message, sender) {
+                              print("Message envoyé: $message");
+                            },
+                            onLocationMessageTap: (latitude, longitude) {
+                              _navigateToMapWithCoordinates(latitude, longitude);
+                            },
+                          ),
                         ),
-                      ),
-                    );
+                      );
                   }
                 },
                 child: const Text("Réserver un guide"),
@@ -614,15 +607,7 @@ class _MapsPageState extends State<MapsPage> {
         MaterialPageRoute(
           builder: (context) => ChatScreen(
             user: selectedGuide['name'],
-            messages: [
-              {
-                'message':
-                    'Position partagée: ${_currentPosition!.latitude}, ${_currentPosition!.longitude}',
-                'sender': 'Vous',
-                'latitude': _currentPosition!.latitude,
-                'longitude': _currentPosition!.longitude,
-              }
-            ], // Passer la liste des messages avec la position
+            messages: [], // TODO: Passer la liste réelle des messages
             onSendMessage: (message, sender) {
               // Gérer l'envoi du message ici
               print("Message envoyé : $message par $sender");
