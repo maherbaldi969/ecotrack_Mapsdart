@@ -5,7 +5,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
-import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'data/tracer_itinéraire.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -14,6 +14,7 @@ import 'dart:async'; // Ajoutez cette ligne
 import 'dart:math'; // For min/max functions
 import '../chat/chat_list_screen.dart';
 import '../chat/chat_screen.dart';
+import '../chat/chat_provider.dart';
 import 'alerts/alert_models.dart';
 import 'alerts/alert_service.dart';
 import 'alerts/weather_service.dart';
@@ -614,6 +615,13 @@ class _MapsPageState extends State<MapsPage> {
 
 // Fonction pour envoyer la position au guide
   void _sendPositionToGuide(Map<String, dynamic> guide, Position position) {
+    final chatProvider = Provider.of<ChatProvider>(context, listen: false);
+
+    final contenu = 'Position partagée: ${position.latitude}, ${position.longitude}';
+    final expediteurId = 1; // Assuming current user id is 1
+
+    chatProvider.sendMessage(contenu, expediteurId);
+
     _showSnackBar("Position partagée avec ${guide['name']}");
   }
 
