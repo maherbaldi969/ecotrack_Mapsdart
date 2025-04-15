@@ -1,117 +1,93 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'support_style.dart';
+import 'support_api_service.dart';
+import 'support_ticket.dart';
 
-class SupportHistory extends StatelessWidget {
-  final List<SupportInteraction> interactions = [
-    SupportInteraction(
-      type: InteractionType.chat,
-      date: DateTime.now().subtract(const Duration(days: 1)),
-      summary: "Problème de réservation",
-      status: InteractionStatus.resolved,
-    ),
-    SupportInteraction(
-      type: InteractionType.call,
-      date: DateTime.now().subtract(const Duration(days: 3)),
-      summary: "Question sur un guide",
-      status: InteractionStatus.pending,
-    ),
-    SupportInteraction(
-      type: InteractionType.form,
-      date: DateTime.now().subtract(const Duration(days: 5)),
-      summary: "Problème technique",
-      status: InteractionStatus.closed,
-    ),
-  ];
+class SupportHistory extends StatefulWidget {
+  const SupportHistory({super.key});
+
+  @override
+  _SupportHistoryState createState() => _SupportHistoryState();
+}
+
+class _SupportHistoryState extends State<SupportHistory> {
+  final SupportApiService _apiService = SupportApiService();
+  late Future<List<SupportTicket>> _ticketsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _ticketsFuture = _apiService.fetchTickets();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Historique des interactions', style: merriweatherBold),
+        title: Text('Historique des tickets', style: merriweatherBold),
         backgroundColor: vertPrimaire,
         foregroundColor: blanc,
       ),
-      body: ListView.builder(
-        itemCount: interactions.length,
-        itemBuilder: (context, index) {
-          final interaction = interactions[index];
-          return Card(
-            margin: const EdgeInsets.all(8.0),
-            child: ListTile(
-              leading: Icon(
-                _getInteractionIcon(interaction.type),
-                color: _getStatusColor(interaction.status),
-              ),
-              title: Text(interaction.summary, style: merriweatherBold),
-              subtitle: Text(
-                DateFormat('dd/MM/yyyy HH:mm').format(interaction.date),
-                style: merriweatherNormal,
-              ),
-              trailing: Chip(
-                label: Text(
-                  _getStatusText(interaction.status),
-                  style: TextStyle(color: blanc),
-                ),
-                backgroundColor: _getStatusColor(interaction.status),
-              ),
-              onTap: () {
-                // Navigation vers les détails de l'interaction
+      body: FutureBuilder<List<SupportTicket>>(
+        future: _ticketsFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Erreur: \${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('Aucun ticket trouvé.'));
+          } else {
+            final tickets = snapshot.data!;
+            return ListView.builder(
+              itemCount: tickets.length,
+              itemBuilder: (context, index) {
+                final ticket = tickets[index];
+                return Card(
+                  margin: const EdgeInsets.all(8.0),
+                  child: ListTile(
+                    leading: Icon(
+                      Icons.assignment,
+                      color: _getStatusColor(ticket.statut),
+                    ),
+                    title: Text(ticket.sujet, style: merriweatherBold),
+                    subtitle: Text(
+                      ticket.description,
+                      style: merriweatherNormal,
+                    ),
+                    trailing: Chip(
+                      label: Text(
+                        ticket.statut,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      backgroundColor: _getStatusColor(ticket.statut),
+                    ),
+                    onTap: () {
+                      // TODO: Navigate to ticket details if needed
+                    },
+                  ),
+                );
               },
-            ),
-          );
+            );
+          }
         },
       ),
     );
   }
 
-  IconData _getInteractionIcon(InteractionType type) {
-    switch (type) {
-      case InteractionType.chat:
-        return Icons.chat;
-      case InteractionType.call:
-        return Icons.call;
-      case InteractionType.form:
-        return Icons.assignment;
-    }
-  }
-
-  Color _getStatusColor(InteractionStatus status) {
-    switch (status) {
-      case InteractionStatus.pending:
+  Color _getStatusColor(String statut) {
+    switch (statut.toLowerCase()) {
+      case 'en cours':
+      case 'pending':
         return Colors.orange;
-      case InteractionStatus.resolved:
+      case 'résolu':
+      case 'resolved':
         return Colors.green;
-      case InteractionStatus.closed:
+      case 'clôturé':
+      case 'closed':
         return Colors.grey;
+      default:
+        return Colors.blueGrey;
     }
   }
-
-  String _getStatusText(InteractionStatus status) {
-    switch (status) {
-      case InteractionStatus.pending:
-        return 'En cours';
-      case InteractionStatus.resolved:
-        return 'Résolu';
-      case InteractionStatus.closed:
-        return 'Clôturé';
-    }
-  }
-}
-
-enum InteractionType { chat, call, form }
-enum InteractionStatus { pending, resolved, closed }
-
-class SupportInteraction {
-  final InteractionType type;
-  final DateTime date;
-  final String summary;
-  final InteractionStatus status;
-
-  SupportInteraction({
-    required this.type,
-    required this.date,
-    required this.summary,
-    required this.status,
-  });
 }

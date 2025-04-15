@@ -189,7 +189,7 @@ class _EcoTrackAppState extends State<EcoTrackApp> {
             guideId: args?['guideId'] ?? 'default',
             userId: args?['userId'] ?? 'default',
             guideName: args?['guideName'],
-            visiteDate: args?['visitDate'],
+            visiteDate: args?['visitDate'], 
           );
         },
         '/partenaire': (context) => PartnerOffersScreen(),

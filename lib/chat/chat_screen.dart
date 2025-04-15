@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:record/record.dart';  // Added import for record package
+import 'package:flutter_sound/flutter_sound.dart';  // Added import for flutter_sound package
+import 'package:permission_handler/permission_handler.dart';  // Added import for permission_handler
 import 'settings_page.dart';
 import '../navigationetsuivi/Maps.dart';
 import '../services/language_service.dart';
@@ -27,12 +28,13 @@ class _ChatScreenState extends State<ChatScreen> {
   late LanguageService _languageService;
   final Map<String, String> _translatedMessages = {};
 
-  final Record _record = Record();  // Record instance added
+  final FlutterSoundRecorder _recorder = FlutterSoundRecorder();  // FlutterSoundRecorder instance
   bool _isRecording = false;       // Recording state
 
   @override
   void initState() {
     super.initState();
+    _openRecorder();
     final chatProvider = Provider.of<ChatProvider>(context, listen: false);
     chatProvider.fetchMessages();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -66,21 +68,42 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  Future<void> _openRecorder() async {
+    await _recorder.openRecorder();
+    // Request microphone permission if needed
+    await _recorder.setSubscriptionDuration(const Duration(milliseconds: 500));
+  }
+
   Future<void> _startRecording() async {
-    bool hasPermission = await _record.hasPermission();
-    if (!hasPermission) {
-      print("Recording permission denied");
-      return;
-    }
     if (_isRecording) return;
 
+    // Request microphone permission at runtime
+    final status = await Permission.microphone.request();
+    if (!status.isGranted) {
+      // ignore: avoid_print
+      print("Permission microphone refusée");
+      return;
+    }
+
     try {
-      await _record.start();
+      final hasPermission = await _recorder.isEncoderSupported(
+          Codec.aacADTS); // Check if codec is supported
+      if (!hasPermission) {
+        // ignore: avoid_print
+        print("Recording permission denied or codec not supported");
+        return;
+      }
+      await _recorder.startRecorder(
+        toFile: 'audio.aac',
+        codec: Codec.aacADTS,
+      );
       setState(() {
         _isRecording = true;
       });
+      // ignore: avoid_print
       print("Recording started");
     } catch (e) {
+      // ignore: avoid_print
       print("Error starting recording: $e");
     }
   }
@@ -89,13 +112,15 @@ class _ChatScreenState extends State<ChatScreen> {
     if (!_isRecording) return;
 
     try {
-      final path = await _record.stop();
+      final path = await _recorder.stopRecorder();
       setState(() {
         _isRecording = false;
       });
+      // ignore: avoid_print
       print("Recording stopped, file saved at: $path");
       // You can add code here to handle the recorded file path
     } catch (e) {
+      // ignore: avoid_print
       print("Error stopping recording: $e");
     }
   }
