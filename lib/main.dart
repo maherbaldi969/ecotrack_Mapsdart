@@ -34,6 +34,8 @@ import 'package:ecotrack/services/shared_preferences_service.dart';
 import 'package:ecotrack/recommandations_preferences/activity_history_service.dart';
 import 'package:ecotrack/recommandations_preferences/recommandations_service.dart';
 import 'package:ecotrack/screens/language_selection_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'authentication/login.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -85,10 +87,10 @@ class EcoTrackApp extends StatefulWidget {
   const EcoTrackApp({super.key});
 
   @override
-  _EcoTrackAppState createState() => _EcoTrackAppState();
+  EcoTrackAppState createState() => EcoTrackAppState();
 }
 
-class _EcoTrackAppState extends State<EcoTrackApp> {
+class EcoTrackAppState extends State<EcoTrackApp> {
   AppTheme _currentTheme = AppTheme.light;
   // Removed the unused _weatherService field
   void _applyTheme(AppTheme theme) {
@@ -213,10 +215,10 @@ class MyHomePage extends StatefulWidget {
   final String title;
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  MyHomePageState createState() => MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class MyHomePageState extends State<MyHomePage> {
   int _selectedIndex =
       0; // Index de l'élément sélectionné dans la barre de navigation
 
@@ -231,13 +233,6 @@ class _MyHomePageState extends State<MyHomePage> {
     ), // Chat
     FitnessApp(), // Ma page (par exemple, les favoris)
   ];
-
-  // Méthode pour mettre à jour l'index sélectionné
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
 
   @override
   void initState() {
@@ -268,7 +263,7 @@ class _MyHomePageState extends State<MyHomePage> {
             PopupMenuButton<AppTheme>(
               onSelected: (value) {
                 final state =
-                    context.findAncestorStateOfType<_EcoTrackAppState>();
+                    context.findAncestorStateOfType<EcoTrackAppState>();
                 state?._applyTheme(value);
               },
               itemBuilder: (context) => [
@@ -352,6 +347,11 @@ class _MyHomePageState extends State<MyHomePage> {
               Icons.settings, "Paramètres", '/language-selection', context),
           _buildDrawerItem(Icons.history, "Historique", '/history', context),
           _buildDrawerItem(Icons.cloud, "Météo", '/meteo', context),
+          ListTile(
+            leading: const Icon(Icons.exit_to_app),
+            title: Text("Déconnexion", style: GoogleFonts.merriweather()),
+            onTap: () => _logout(context),
+          ),
         ],
       ),
     );
@@ -366,6 +366,19 @@ class _MyHomePageState extends State<MyHomePage> {
         Navigator.pop(context);
         if (route.isNotEmpty) Navigator.pushNamed(context, route);
       },
+    );
+  }
+
+  void _logout(BuildContext context) async {
+    // Clear session or token storage here if needed
+    // For example, using SharedPreferences:
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+
+    // Navigate to login page or initial route
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginPage()),
     );
   }
 }
@@ -412,4 +425,4 @@ class MyHomePageContent extends StatelessWidget {
       ],
     );
   }
-}
+} 

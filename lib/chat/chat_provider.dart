@@ -89,4 +89,21 @@ class ChatProvider with ChangeNotifier {
       print("Error sending message: $e");
     }
   }
+
+  // New method to delete a message
+  Future<void> deleteMessage(String messageId) async {
+    _messages.removeWhere((message) => message['id'] == messageId);
+    notifyListeners();
+
+    try {
+      final response = await http.delete(Uri.parse('$baseUrl/$messageId'));
+      if (response.statusCode == 200) {
+        print("Message deleted successfully");
+      } else {
+        print("Failed to delete message: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error deleting message: $e");
+    }
+  }
 }
