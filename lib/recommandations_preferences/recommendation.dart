@@ -1,12 +1,13 @@
 import 'recommandations_service.dart';
+import '../models/user_preferences.dart'; // Importing UserPreferences
 
 class Recommendation {
   final RecommandationsService _service;
 
-  Recommendation(this._service);
+  Recommendation(this._service); 
 
-  Future<List<Map<String, dynamic>>> genererRecommendation() async {
-    // Call the service to get personalized recommendations
+  Future<List<Map<String, dynamic>>> genererRecommendation(UserPreferences userPreferences) async {
+    // Use user preferences to generate recommendations
     return await _service.getPersonalizedRecommandations();
   }
 

@@ -52,4 +52,34 @@ class Evaluation {
       'date': date.toIso8601String(),
     };
   }
+
+  void publierEvaluation() {
+    // Logic to save the evaluation to a database or data source
+    print('Evaluation published: $commentaire');
+  }
+
+  void modifierEvaluation(Map<String, dynamic> updatedData) {
+    // Logic to modify the evaluation with updated data
+    print('Evaluation modified: $id');
+  }
+
+  void supprimerEvaluation() {
+    // Logic to delete the evaluation from the data source
+    print('Evaluation deleted: $id');
+  }
+
+  void afficherEvaluation() {
+    // Logic to display the evaluation details
+    print('Evaluation: $commentaire');
+  }
+
+  String getMeta(String key) {
+    // Logic to retrieve metadata associated with the evaluation
+    return 'Meta for $key';
+  }
+
+  void setMeta(String key, String value) {
+    // Logic to set metadata associated with the evaluation
+    print('Meta set: $key = $value');
+  }
 }
