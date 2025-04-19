@@ -1,44 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:google_fonts/google_fonts.dart';
-import 'form_helper.dart';
-import 'dart:async';
-import 'api_service.dart';
-import 'session_manager.dart';
+import 'home.dart';
+import '../main.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({Key? key}) : super(key: key);
-
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  _LoginPageState createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _formKey = GlobalKey<FormState>();
-  final _usernameController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _obscureText = true;
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
-
-  @override
-  void dispose() {
-    _usernameController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
+  bool _obscureText = true;
 
   void _togglePasswordVisibility() {
-    setState(() => _obscureText = !_obscureText);
+    setState(() {
+      _obscureText = !_obscureText;
+    });
   }
 
   Future<void> _login() async {
-    if (!_formKey.currentState!.validate() ||
-        _usernameController.text.isEmpty ||
-        _passwordController.text.isEmpty) {
-      setState(() {
-        _errorMessage = 'Username and password cannot be null';
-      });
+    if (!_formKey.currentState!.validate()) {
       return;
     }
 
@@ -47,62 +34,47 @@ class _LoginPageState extends State<LoginPage> {
       _errorMessage = null;
     });
 
-    try {
-      final username = _usernameController.text.trim();
-      final password = _passwordController.text.trim();
+    final url = Uri.parse('http://192.168.112.51:3000/auth/login');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'username': _usernameController.text,
+        'password': _passwordController.text,
+      }),
+    );
 
-      debugPrint('Username: $username, Password: $password');
+    setState(() {
+      _isLoading = false;
+    });
 
-      final response = await ApiService.login(
-        username: username,
-        password: password,
-      ).timeout(const Duration(seconds: 30));
-
-      debugPrint('API Response: $response');
-
-      if (response['success'] == true) {
-        final token = response['token']?.toString();
-        if (token == null || token.isEmpty) {
-          throw Exception('Token is missing or empty in the response');
-        }
-
-        await Future.wait([
-          SessionManager.saveToken(token),
-          SessionManager.saveUserData(response['user'] ?? {}),
-        ]);
-
-        /*if (!mounted) return;
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const EcoTrackApp()),
-        );*/
-      } else {
-        throw Exception(
-            response['message']?.toString() ?? 'Authentification échouée');
-      }
-    } on http.ClientException catch (e) {
-      setState(() => _errorMessage = 'Erreur réseau: ${e.message}');
-    } on TimeoutException {
-      setState(() => _errorMessage = 'Le serveur ne répond pas');
-    } on FormatException {
-      setState(() => _errorMessage = 'Format de réponse invalide');
-    } catch (e) {
-      setState(() => _errorMessage =
-          'Erreur: ${e.toString().replaceAll('Exception: ', '')}');
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+    if (response.statusCode == 200) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => HomePage()),
+      );
+    } else {
+      setState(() {
+        _errorMessage = 'Login failed. Please check your credentials.';
+      });
     }
   }
 
-  Future<void> logout() async {
-    await SessionManager.logout();
-    if (!mounted) return;
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const LoginPage()),
-      (route) => false,
+  void _showPasswordResetDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Réinitialiser le mot de passe', style: GoogleFonts.merriweather()),
+          content: Text('Fonctionnalité de réinitialisation du mot de passe à implémenter.', style: GoogleFonts.merriweather()),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Fermer', style: GoogleFonts.merriweather()),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -140,7 +112,7 @@ class _LoginPageState extends State<LoginPage> {
                     ],
                   ),
                 ),
-
+                
                 // Login Form
                 Container(
                   padding: const EdgeInsets.all(24),
@@ -165,39 +137,40 @@ class _LoginPageState extends State<LoginPage> {
                           TextFormField(
                             controller: _usernameController,
                             decoration: InputDecoration(
-                              labelText: 'Email',
+                              labelText: 'Nom d\'utilisateur',
                               labelStyle: GoogleFonts.merriweather(
                                 color: Colors.black54,
                               ),
-                              prefixIcon: const Icon(Icons.email_outlined,
-                                  color: Color(0xFF80C000)),
+                              prefixIcon: const Icon(Icons.person_outline, color: Color(0xFF80C000)),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide:
-                                    const BorderSide(color: Colors.grey),
+                                borderSide: const BorderSide(color: Colors.grey),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide:
-                                    const BorderSide(color: Color(0xFF80C000)),
+                                borderSide: const BorderSide(color: Color(0xFF80C000)),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide:
-                                    const BorderSide(color: Colors.grey),
+                                borderSide: const BorderSide(color: Colors.grey),
                               ),
                               filled: true,
                               fillColor: Colors.grey[50],
                             ),
-                            keyboardType: TextInputType.emailAddress,
-                            autofillHints: const [AutofillHints.email],
-                            validator: FormHelper.validateUsername,
+                            keyboardType: TextInputType.text,
+                            autofillHints: const [AutofillHints.username],
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Veuillez entrer votre nom d\'utilisateur';
+                              }
+                              return null;
+                            },
                             textInputAction: TextInputAction.next,
                             style: GoogleFonts.merriweather(),
                           ),
-
+                          
                           const SizedBox(height: 20),
-
+                          
                           // Password Field
                           TextFormField(
                             controller: _passwordController,
@@ -206,49 +179,50 @@ class _LoginPageState extends State<LoginPage> {
                               labelStyle: GoogleFonts.merriweather(
                                 color: Colors.black54,
                               ),
-                              prefixIcon: const Icon(Icons.lock_outline,
-                                  color: Color(0xFF80C000)),
+                              prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF80C000)),
                               suffixIcon: IconButton(
                                 icon: Icon(
-                                  _obscureText
-                                      ? Icons.visibility_outlined
-                                      : Icons.visibility_off_outlined,
+                                  _obscureText ? Icons.visibility_outlined : Icons.visibility_off_outlined,
                                   color: const Color(0xFF80C000),
                                 ),
                                 onPressed: _togglePasswordVisibility,
                               ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide:
-                                    const BorderSide(color: Colors.grey),
+                                borderSide: const BorderSide(color: Colors.grey),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide:
-                                    const BorderSide(color: Color(0xFF80C000)),
+                                borderSide: const BorderSide(color: Color(0xFF80C000)),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide:
-                                    const BorderSide(color: Colors.grey),
+                                borderSide: const BorderSide(color: Colors.grey),
                               ),
                               filled: true,
                               fillColor: Colors.grey[50],
                             ),
                             obscureText: _obscureText,
                             autofillHints: const [AutofillHints.password],
-                            validator: FormHelper.validatePassword,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Veuillez entrer votre mot de passe';
+                              }
+                              if (value.length < 6) {
+                                return 'Le mot de passe doit contenir au moins 6 caractères';
+                              }
+                              return null;
+                            },
                             textInputAction: TextInputAction.done,
                             onFieldSubmitted: (_) => _login(),
                             style: GoogleFonts.merriweather(),
                           ),
-
+                          
                           // Forgot Password
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
-                              onPressed: () =>
-                                  _showPasswordResetDialog(context),
+                              onPressed: () => _showPasswordResetDialog(context),
                               child: Text(
                                 'Mot de passe oublié ?',
                                 style: GoogleFonts.merriweather(
@@ -258,9 +232,9 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ),
                           ),
-
+                          
                           const SizedBox(height: 10),
-
+                          
                           // Error Message
                           if (_errorMessage != null)
                             Padding(
@@ -274,7 +248,7 @@ class _LoginPageState extends State<LoginPage> {
                                 textAlign: TextAlign.center,
                               ),
                             ),
-
+                          
                           // Login Button
                           SizedBox(
                             width: double.infinity,
@@ -282,8 +256,7 @@ class _LoginPageState extends State<LoginPage> {
                               onPressed: _isLoading ? null : _login,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF80C000),
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 16),
+                                padding: const EdgeInsets.symmetric(vertical: 16),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
@@ -313,7 +286,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                 ),
-
+                
                 // Footer Section
                 Container(
                   margin: const EdgeInsets.only(top: 40),
@@ -327,77 +300,6 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ],
             ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showPasswordResetDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Réinitialisation du mot de passe',
-                style: GoogleFonts.merriweather(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF80C000),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Un lien de réinitialisation sera envoyé à votre email.',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.merriweather(
-                  fontSize: 14,
-                  color: Colors.black54,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text(
-                      'ANNULER',
-                      style: GoogleFonts.merriweather(
-                        color: Colors.black54,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      // TODO: Implémenter la logique de réinitialisation
-                      Navigator.pop(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF80C000),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: Text(
-                      'CONFIRMER',
-                      style: GoogleFonts.merriweather(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
           ),
         ),
       ),

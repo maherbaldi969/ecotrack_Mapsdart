@@ -34,8 +34,7 @@ import 'package:ecotrack/services/shared_preferences_service.dart';
 import 'package:ecotrack/recommandations_preferences/activity_history_service.dart';
 import 'package:ecotrack/recommandations_preferences/recommandations_service.dart';
 import 'package:ecotrack/screens/language_selection_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'authentication/login.dart';
+import 'authentication/main.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -178,6 +177,7 @@ class EcoTrackAppState extends State<EcoTrackApp> {
             ),
         '/explore': (context) => Explore(),
         '/mapage': (context) => FitnessApp(),
+        '/login': (context) => MyApp(),
         '/custom-program': (context) => PersonalisationHome(),
         '/badage': (context) => BadgeScreen(),
         '/support': (context) =>
@@ -191,7 +191,7 @@ class EcoTrackAppState extends State<EcoTrackApp> {
             guideId: args?['guideId'] ?? 'default',
             userId: args?['userId'] ?? 'default',
             guideName: args?['guideName'],
-            visiteDate: args?['visitDate'], 
+            visiteDate: args?['visitDate'],
           );
         },
         '/partenaire': (context) => PartnerOffersScreen(),
@@ -347,11 +347,7 @@ class MyHomePageState extends State<MyHomePage> {
               Icons.settings, "Paramètres", '/language-selection', context),
           _buildDrawerItem(Icons.history, "Historique", '/history', context),
           _buildDrawerItem(Icons.cloud, "Météo", '/meteo', context),
-          ListTile(
-            leading: const Icon(Icons.exit_to_app),
-            title: Text("Déconnexion", style: GoogleFonts.merriweather()),
-            onTap: () => _logout(context),
-          ),
+          _buildDrawerItem(Icons.login, "Login", '/login', context),
         ],
       ),
     );
@@ -366,19 +362,6 @@ class MyHomePageState extends State<MyHomePage> {
         Navigator.pop(context);
         if (route.isNotEmpty) Navigator.pushNamed(context, route);
       },
-    );
-  }
-
-  void _logout(BuildContext context) async {
-    // Clear session or token storage here if needed
-    // For example, using SharedPreferences:
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
-
-    // Navigate to login page or initial route
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const LoginPage()),
     );
   }
 }
@@ -425,4 +408,4 @@ class MyHomePageContent extends StatelessWidget {
       ],
     );
   }
-} 
+}
