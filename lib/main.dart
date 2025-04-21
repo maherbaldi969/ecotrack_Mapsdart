@@ -34,7 +34,7 @@ import 'package:ecotrack/services/shared_preferences_service.dart';
 import 'package:ecotrack/recommandations_preferences/activity_history_service.dart';
 import 'package:ecotrack/recommandations_preferences/recommandations_service.dart';
 import 'package:ecotrack/screens/language_selection_screen.dart';
-import 'authentication/main.dart';
+import 'authentication/login.dart'; // Ajoutez cette ligne
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -161,6 +161,8 @@ class EcoTrackAppState extends State<EcoTrackApp> {
       theme: _getThemeData(),
       initialRoute: '/',
       routes: {
+        '/login': (context) =>
+            LoginPage(), // Corriger la route pour utiliser LoginPage
         '/': (context) => const MyHomePage(title: 'EcoTrack'),
         '/itineraries': (context) => ItineraryListScreen(),
         '/map': (context) => MapsPage(),
@@ -177,7 +179,6 @@ class EcoTrackAppState extends State<EcoTrackApp> {
             ),
         '/explore': (context) => Explore(),
         '/mapage': (context) => FitnessApp(),
-        '/login': (context) => MyApp(),
         '/custom-program': (context) => PersonalisationHome(),
         '/badage': (context) => BadgeScreen(),
         '/support': (context) =>
@@ -347,7 +348,7 @@ class MyHomePageState extends State<MyHomePage> {
               Icons.settings, "Paramètres", '/language-selection', context),
           _buildDrawerItem(Icons.history, "Historique", '/history', context),
           _buildDrawerItem(Icons.cloud, "Météo", '/meteo', context),
-          _buildDrawerItem(Icons.login, "Login", '/login', context),
+          _buildDrawerItem(Icons.login, "Login", '', context),
         ],
       ),
     );

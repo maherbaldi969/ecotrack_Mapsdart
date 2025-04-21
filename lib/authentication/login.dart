@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:google_fonts/google_fonts.dart';
-import 'home.dart';
-import '../main.dart';
+import 'main.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -49,10 +48,7 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     if (response.statusCode == 200) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => HomePage()),
-      );
+      Navigator.pushReplacementNamed(context, '/');
     } else {
       setState(() {
         _errorMessage = 'Login failed. Please check your credentials.';
@@ -65,8 +61,11 @@ class _LoginPageState extends State<LoginPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Réinitialiser le mot de passe', style: GoogleFonts.merriweather()),
-          content: Text('Fonctionnalité de réinitialisation du mot de passe à implémenter.', style: GoogleFonts.merriweather()),
+          title: Text('Réinitialiser le mot de passe',
+              style: GoogleFonts.merriweather()),
+          content: Text(
+              'Fonctionnalité de réinitialisation du mot de passe à implémenter.',
+              style: GoogleFonts.merriweather()),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -112,7 +111,7 @@ class _LoginPageState extends State<LoginPage> {
                     ],
                   ),
                 ),
-                
+
                 // Login Form
                 Container(
                   padding: const EdgeInsets.all(24),
@@ -125,7 +124,7 @@ class _LoginPageState extends State<LoginPage> {
                         spreadRadius: 5,
                         blurRadius: 10,
                         offset: const Offset(0, 3),
-                      ),
+                      )
                     ],
                   ),
                   child: Form(
@@ -141,18 +140,20 @@ class _LoginPageState extends State<LoginPage> {
                               labelStyle: GoogleFonts.merriweather(
                                 color: Colors.black54,
                               ),
-                              prefixIcon: const Icon(Icons.person_outline, color: Color(0xFF80C000)),
+                              prefixIcon: const Icon(Icons.person_outline,
+                                  color: Color(0xFF80C000)),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(color: Colors.grey),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(color: Color(0xFF80C000)),
+                                borderSide:
+                                    const BorderSide(color: Color(0xFF80C000)),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(color: Colors.grey),
+                                borderSide:
+                                    const BorderSide(color: Colors.grey),
                               ),
                               filled: true,
                               fillColor: Colors.grey[50],
@@ -168,9 +169,9 @@ class _LoginPageState extends State<LoginPage> {
                             textInputAction: TextInputAction.next,
                             style: GoogleFonts.merriweather(),
                           ),
-                          
+
                           const SizedBox(height: 20),
-                          
+
                           // Password Field
                           TextFormField(
                             controller: _passwordController,
@@ -179,25 +180,29 @@ class _LoginPageState extends State<LoginPage> {
                               labelStyle: GoogleFonts.merriweather(
                                 color: Colors.black54,
                               ),
-                              prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF80C000)),
+                              prefixIcon: const Icon(Icons.lock_outline,
+                                  color: Color(0xFF80C000)),
                               suffixIcon: IconButton(
                                 icon: Icon(
-                                  _obscureText ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                                  _obscureText
+                                      ? Icons.visibility_outlined
+                                      : Icons.visibility_off_outlined,
                                   color: const Color(0xFF80C000),
                                 ),
                                 onPressed: _togglePasswordVisibility,
                               ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(color: Colors.grey),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(color: Color(0xFF80C000)),
+                                borderSide:
+                                    const BorderSide(color: Color(0xFF80C000)),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(color: Colors.grey),
+                                borderSide:
+                                    const BorderSide(color: Colors.grey),
                               ),
                               filled: true,
                               fillColor: Colors.grey[50],
@@ -217,12 +222,13 @@ class _LoginPageState extends State<LoginPage> {
                             onFieldSubmitted: (_) => _login(),
                             style: GoogleFonts.merriweather(),
                           ),
-                          
+
                           // Forgot Password
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
-                              onPressed: () => _showPasswordResetDialog(context),
+                              onPressed: () =>
+                                  _showPasswordResetDialog(context),
                               child: Text(
                                 'Mot de passe oublié ?',
                                 style: GoogleFonts.merriweather(
@@ -232,9 +238,9 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ),
                           ),
-                          
+
                           const SizedBox(height: 10),
-                          
+
                           // Error Message
                           if (_errorMessage != null)
                             Padding(
@@ -248,7 +254,7 @@ class _LoginPageState extends State<LoginPage> {
                                 textAlign: TextAlign.center,
                               ),
                             ),
-                          
+
                           // Login Button
                           SizedBox(
                             width: double.infinity,
@@ -256,7 +262,8 @@ class _LoginPageState extends State<LoginPage> {
                               onPressed: _isLoading ? null : _login,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF80C000),
-                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
@@ -286,7 +293,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                 ),
-                
+
                 // Footer Section
                 Container(
                   margin: const EdgeInsets.only(top: 40),
