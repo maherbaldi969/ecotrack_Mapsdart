@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:google_fonts/google_fonts.dart';
-import 'main.dart';
+import '../services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -16,6 +16,7 @@ class _LoginPageState extends State<LoginPage> {
   bool _isLoading = false;
   String? _errorMessage;
   bool _obscureText = true;
+  final AuthService _authService = AuthService();
 
   void _togglePasswordVisibility() {
     setState(() {
@@ -48,6 +49,11 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     if (response.statusCode == 200) {
+      final responseData = jsonDecode(response.body);
+      final token = responseData['token'];
+      if (token != null) {
+        await _authService.saveToken(token);
+      }
       Navigator.pushReplacementNamed(context, '/');
     } else {
       setState(() {
@@ -294,17 +300,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
 
-                // Footer Section
-                Container(
-                  margin: const EdgeInsets.only(top: 40),
-                  child: Text(
-                    'Nouveau ici ? Créez un compte',
-                    style: GoogleFonts.merriweather(
-                      color: Colors.black54,
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
+                // Footer Sectio
               ],
             ),
           ),

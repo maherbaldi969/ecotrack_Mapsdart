@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'chat/chat_provider.dart';
@@ -35,6 +37,7 @@ import 'package:ecotrack/recommandations_preferences/activity_history_service.da
 import 'package:ecotrack/recommandations_preferences/recommandations_service.dart';
 import 'package:ecotrack/screens/language_selection_screen.dart';
 import 'authentication/login.dart'; // Ajoutez cette ligne
+import 'services/auth_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -159,7 +162,7 @@ class EcoTrackAppState extends State<EcoTrackApp> {
       title: 'EcoTrack',
       debugShowCheckedModeBanner: false,
       theme: _getThemeData(),
-      initialRoute: '/',
+      initialRoute: '/login',
       routes: {
         '/login': (context) =>
             LoginPage(), // Corriger la route pour utiliser LoginPage
@@ -223,6 +226,10 @@ class MyHomePageState extends State<MyHomePage> {
   int _selectedIndex =
       0; // Index de l'élément sélectionné dans la barre de navigation
 
+  String? _userName;
+  String? _userEmail;
+  String? _userImageUrl;
+
   // Liste des écrans correspondants aux éléments de la barre de navigation
   final List<Widget> _pages = [
     const MyHomePageContent(title: 'EcoTrack'), // Accueil
@@ -238,12 +245,51 @@ class MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
+    _fetchUserProfile();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final weatherService =
           Provider.of<WeatherService>(context, listen: false);
       // Coordonnées pour Tabarka (nord-ouest de la Tunisie)
       weatherService.fetchWeather(36.9544, 8.7580);
     });
+  }
+
+  Future<void> _fetchUserProfile() async {
+    try {
+      final authService = AuthService();
+      final token = await authService.getToken();
+      final uri = Uri.parse('http://192.168.112.51:3000/auth/user');
+      final headers = <String, String>{
+        'Content-Type': 'application/json',
+      };
+      if (token != null && token.isNotEmpty) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+      final httpResponse = await http.get(uri, headers: headers);
+      if (httpResponse.statusCode == 200) {
+        final data = jsonDecode(httpResponse.body);
+        setState(() {
+          _userName = data['name'] ??
+              data['username'] ??
+              data['fullName'] ??
+              'Utilisateur';
+          _userEmail = data['email'] ?? '';
+          _userImageUrl = data['profileImageUrl'];
+        });
+      } else {
+        setState(() {
+          _userName = 'Utilisateur';
+          _userEmail = '';
+          _userImageUrl = null;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _userName = '';
+        _userEmail = '';
+        _userImageUrl = null;
+      });
+    }
   }
 
   @override
@@ -317,13 +363,32 @@ class MyHomePageState extends State<MyHomePage> {
         padding: EdgeInsets.zero,
         children: [
           UserAccountsDrawerHeader(
-            accountName: Text("maherbaldi",
+            accountName: Text(_userName ?? "Chargement...",
                 style: GoogleFonts.merriweather(color: Colors.black)),
-            accountEmail: Text("maherbaldi@gmail.com",
+            accountEmail: Text(_userEmail ?? "",
                 style: GoogleFonts.merriweather(color: Colors.black)),
-            currentAccountPicture: ClipOval(
-              child: Image.asset("assets/images/intinaire.jpeg",
-                  fit: BoxFit.cover),
+            currentAccountPicture: Column(
+              children: [
+                ClipOval(
+                  child: _userImageUrl != null
+                      ? Image.network(_userImageUrl!, fit: BoxFit.cover)
+                      : Image.asset("assets/images/intinaire.jpeg",
+                          fit: BoxFit.cover),
+                ),
+                if (_userImageUrl != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4.0),
+                    child: Text(
+                      _userImageUrl!,
+                      style: GoogleFonts.merriweather(
+                        fontSize: 10,
+                        color: Colors.black54,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+              ],
             ),
             decoration: const BoxDecoration(color: Color(0xFF80C000)),
           ),
@@ -348,7 +413,16 @@ class MyHomePageState extends State<MyHomePage> {
               Icons.settings, "Paramètres", '/language-selection', context),
           _buildDrawerItem(Icons.history, "Historique", '/history', context),
           _buildDrawerItem(Icons.cloud, "Météo", '/meteo', context),
-          _buildDrawerItem(Icons.login, "Login", '', context),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.logout),
+            title: Text("Déconnexion", style: GoogleFonts.merriweather()),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.pushNamedAndRemoveUntil(
+                  context, '/login', (Route<dynamic> route) => false);
+            },
+          ),
         ],
       ),
     );
