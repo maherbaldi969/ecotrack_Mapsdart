@@ -290,7 +290,7 @@ class ProgCard extends StatelessWidget {
           borderRadius: BorderRadius.all(
             Radius.circular(18),
           ),
-          boxShadow: [
+          boxShadow: [ 
             BoxShadow(
               color: Colors.grey,
               spreadRadius: 4,
@@ -299,93 +299,111 @@ class ProgCard extends StatelessWidget {
             ),
           ],
         ),
-        child: Column(
-          children: [
-            Container(
-              height: 140,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(18),
-                  topRight: Radius.circular(18),
-                ),
-                color: Colors.grey[200],
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            height: 140,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(18),
+                topRight: Radius.circular(18),
               ),
-              child: Image.asset(
-                imagePath,
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
+              color: Colors.grey[200],
+            ),
+            child: Image.asset(
+              imagePath,
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+            ),
+          ),
+          Container(
+            margin: EdgeInsets.fromLTRB(10, 10, 10, 0),
+            child: Text(
+              title,
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: Colors.black,
               ),
             ),
-            Container(
-              margin: EdgeInsets.fromLTRB(10, 10, 10, 0),
-              child: Text(
-                title,
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.black,
-                ),
-              ),
-            ),
-            Container(
-              margin: EdgeInsets.symmetric(horizontal: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      place,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        color: Colors.black,
-                        fontWeight: FontWeight.w400,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
+          ),
+          Container(
+            margin: EdgeInsets.symmetric(horizontal: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  place,
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    color: Colors.black,
+                    fontWeight: FontWeight.w400,
                   ),
-                  Row(
-                    children: [
-                      Icon(Icons.place, color: vert, size: 16.0),
-                      SizedBox(width: 4),
-                      Text(
-                        '\${progData.duration} km to city',
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.schedule, color: vert, size: 16.0),
+                    SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        'Durée: \${progData.duration} h',
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           color: Colors.grey[500],
                           fontWeight: FontWeight.w400,
                         ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              margin: EdgeInsets.fromLTRB(10, 3, 10, 0),
-              child: Row(
-                children: [
-                  Row(
-                    children: List.generate(4, (index) {
-                      return Icon(Icons.star_rate, color: vert, size: 14);
-                    })
-                      ..add(Icon(Icons.star_border, color: vert, size: 14)),
-                  ),
-                  SizedBox(width: 20),
-                  Text(
-                    '0 reviews',
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      color: Colors.grey[500],
-                      fontWeight: FontWeight.w400,
                     ),
+                    const SizedBox(width: 16),
+                    Icon(Icons.price_check, color: vert, size: 16.0),
+                    SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        '\${progData.price} TND',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          color: Colors.grey[500],
+                          fontWeight: FontWeight.w400,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Container(
+            margin: EdgeInsets.fromLTRB(10, 3, 10, 0),
+            child: Row(
+              children: [
+                Row(
+                  children: List.generate(4, (index) {
+                    return Icon(Icons.star_rate, color: vert, size: 14);
+                  })
+                    ..add(Icon(Icons.star_border, color: vert, size: 14)),
+                ),
+                SizedBox(width: 20),
+                Text(
+                  '0 reviews',
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    color: Colors.grey[500],
+                    fontWeight: FontWeight.w400,
                   ),
-                ],
-              ),
-            )
-          ],
-        ),
+                ),
+              ],
+            ),
+          )
+        ],
+      ),
       ),
     );
   }
-}
+} 
