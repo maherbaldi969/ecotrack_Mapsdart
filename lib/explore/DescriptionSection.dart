@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import '../models/progModels.dart';
+import '../models/tour.dart';
 import 'package:readmore/readmore.dart';
 
 class DescriptionSection extends StatelessWidget {
-  final progModels Progs;
-  const DescriptionSection(this.Progs, {super.key});
+  final Tour tour;
+  const DescriptionSection(this.tour, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -12,7 +12,7 @@ class DescriptionSection extends StatelessWidget {
       width: double.maxFinite,
       padding: const EdgeInsets.symmetric(horizontal: 25),
       child: ReadMoreText(
-        Progs.description,
+        tour.description,
         trimLines: 2,
         colorClickableText: const Color(0xFF80C000),
         trimMode: TrimMode.Line,

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../models/progModels.dart';
+import '../models/tour.dart';
 import 'guideDetails.dart';
 
 class HeaderSection extends StatelessWidget {
-  final progModels Progs;
-  const HeaderSection(this.Progs, {super.key});
+  final Tour tour;
+  const HeaderSection(this.tour, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +27,7 @@ class HeaderSection extends StatelessWidget {
                   Icon(Icons.location_on, color: Color(0xFF80C000)), // Green Color
                   const SizedBox(width: 5),
                   Text(
-                    Progs.place,
+                    tour.locationPoint ?? '',
                     style: GoogleFonts.merriweather(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
@@ -38,7 +38,7 @@ class HeaderSection extends StatelessWidget {
               ),
               const SizedBox(height: 5),
               Text(
-                Progs.title,
+                tour.title ?? '',
                 style: GoogleFonts.merriweather(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -55,12 +55,15 @@ class HeaderSection extends StatelessWidget {
                     children: [
                       Icon(Icons.directions_walk, size: 18, color: Color(0xFF80C000)), // Green Icon
                       const SizedBox(width: 5),
-                      Text(
-                        '\${Progs.distance} km à la ville',
-                        style: GoogleFonts.merriweather(
-                          fontSize: 14,
-                          color: Colors.black, // Black Text
-                          fontWeight: FontWeight.w500,
+                      Expanded(
+                        child: Text(
+                          '\${tour.duration ?? ''} km à la ville',
+                          style: GoogleFonts.merriweather(
+                            fontSize: 14,
+                            color: Colors.black, // Black Text
+                            fontWeight: FontWeight.w500,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -69,12 +72,15 @@ class HeaderSection extends StatelessWidget {
                     children: [
                       Icon(Icons.star, color: Color(0xFF80C000), size: 18), // Green Star
                       const SizedBox(width: 5),
-                      Text(
-                        '\${Progs.avis} Reviews',
-                        style: GoogleFonts.merriweather(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black, // Black Text
+                      Expanded(
+                        child: Text(
+                          '0 Reviews',
+                          style: GoogleFonts.merriweather(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black, // Black Text
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -92,7 +98,7 @@ class HeaderSection extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => GuideReviewsPage(Progs),
+                          builder: (context) => GuideReviewsPage(tour),
                         ),
                       );
                     },

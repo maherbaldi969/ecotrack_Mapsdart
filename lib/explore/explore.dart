@@ -2,8 +2,8 @@ import 'details.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'filtrer.dart';
-import '../models/progModels.dart';
 import '../services/tours_service.dart';
+import '../models/tour.dart';
 
 const vert = Color(0xFF80C000);
 const gris = Color(0xFF8B8787);
@@ -16,7 +16,7 @@ class Explore extends StatefulWidget {
 class _ExploreState extends State<Explore> {
   bool _isLoading = false;
   String? _errorMessage;
-  List<dynamic> _tours = [];
+  List<Tour> _tours = [];
 
   final ToursService toursService = ToursService();
 
@@ -32,15 +32,17 @@ class _ExploreState extends State<Explore> {
       _errorMessage = null;
     });
     try {
-      final tours = await toursService.getAllTours();
-      print('Fetched tours: \$tours');
+      final toursData = await toursService.getAllTours();
+      // Removed print statements for production code
+      final tours = toursData.map<Tour>((map) => Tour.fromMap(map)).toList();
       setState(() {
         _tours = tours;
       });
     } catch (e) {
-      print('Error loading tours: $e');
+      // Removed print statements for production code
       setState(() {
-        _errorMessage = "Erreur lors du chargement des tours. Veuillez vérifier votre connexion internet et réessayer.";
+        _errorMessage =
+            "Erreur lors du chargement des tours. Veuillez vérifier votre connexion internet et réessayer.";
       });
     } finally {
       setState(() {
@@ -74,7 +76,7 @@ class _ExploreState extends State<Explore> {
     );
     if (result != null && result is List<dynamic>) {
       setState(() {
-        _tours = result;
+        _tours = result.map<Tour>((map) => Tour.fromMap(map)).toList();
       });
     } else {
       _loadTours();
@@ -115,12 +117,14 @@ class _ExploreState extends State<Explore> {
                               children: [
                                 Text('${_tours.length} Tours',
                                     style: GoogleFonts.poppins(
-                                        color: Color(0xFF80C000), fontSize: 15)),
+                                        color: Color(0xFF80C000),
+                                        fontSize: 15)),
                                 Row(
                                   children: [
                                     Text('Filtrer ',
                                         style: GoogleFonts.poppins(
-                                            color: Color(0xFF80C000), fontSize: 15)),
+                                            color: Color(0xFF80C000),
+                                            fontSize: 15)),
                                     IconButton(
                                       onPressed: _openFilterDialog,
                                       icon: Icon(
@@ -139,7 +143,8 @@ class _ExploreState extends State<Explore> {
                                   padding: const EdgeInsets.all(20.0),
                                   child: Text(
                                     'Aucun résultat',
-                                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                                    style: TextStyle(
+                                        fontSize: 16, color: Colors.grey),
                                     textAlign: TextAlign.center,
                                   ),
                                 )
@@ -149,7 +154,9 @@ class _ExploreState extends State<Explore> {
                                   itemCount: _tours.length,
                                   itemBuilder: (context, index) {
                                     final tour = _tours[index];
-                                    return ProgCard.fromMap(tour);
+                                    final imagePath =
+                                        'assets/images/prog${(index % 4) + 1}.jpg';
+                                    return ProgCard(tour, imagePath: imagePath);
                                   },
                                 ),
                         ],
@@ -250,38 +257,31 @@ class SearchSection extends StatelessWidget {
 }
 
 class ProgCard extends StatelessWidget {
-  final dynamic progData;
-  ProgCard(this.progData);
+  final Tour progData;
+  final String imagePath;
 
-  factory ProgCard.fromMap(Map<String, dynamic> map) {
-    return ProgCard(map);
-  }
+  const ProgCard(this.progData, {required this.imagePath, Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final title = progData['title'] ?? '';
-    final place = progData['place'] ?? '';
-    final distance = progData['distance'] ?? 0;
-    final review = progData['review'] ?? 0;
-    final picture = progData['picture'];
+    final title = progData.title;
+    final place = progData.locationPoint;
 
     return GestureDetector(
-      onTap: () {
-        try {
-          if (progData != null) {
+        onTap: () {
+          try {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => details(Progs: progData),
+                builder: (context) => Details(Progs: progData),
               ),
             );
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("Erreur: impossible d'ouvrir les détails")),
+            );
           }
-        } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Erreur: impossible d'ouvrir les détails")),
-          );
-        }
-      },
+        },
       child: Container(
         margin: EdgeInsets.all(10),
         height: 230,
@@ -310,34 +310,12 @@ class ProgCard extends StatelessWidget {
                 ),
                 color: Colors.grey[200],
               ),
-              child: picture != null
-                  ? Stack(
-                      children: <Widget>[
-                        Image.network(
-                          picture,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          height: double.infinity,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Container(color: Colors.grey[200]),
-                        ),
-                        Positioned(
-                          top: 5,
-                          right: -15,
-                          child: MaterialButton(
-                            color: Colors.white,
-                            shape: CircleBorder(),
-                            onPressed: () {},
-                            child: Icon(
-                              Icons.favorite_outline_rounded,
-                              color: Color(0xFF80C000),
-                              size: 20,
-                            ),
-                          ),
-                        )
-                      ],
-                    )
-                  : null,
+              child: Image.asset(
+                imagePath,
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
+              ),
             ),
             Container(
               margin: EdgeInsets.fromLTRB(10, 10, 10, 0),
@@ -355,19 +333,23 @@ class ProgCard extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    place,
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      color: Colors.black,
-                      fontWeight: FontWeight.w400,
+                  Expanded(
+                    child: Text(
+                      place,
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: Colors.black,
+                        fontWeight: FontWeight.w400,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   Row(
                     children: [
                       Icon(Icons.place, color: vert, size: 16.0),
+                      SizedBox(width: 4),
                       Text(
-                        '\$distance km to city',
+                        '\${progData.duration} km to city',
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           color: Colors.grey[500],
@@ -391,7 +373,7 @@ class ProgCard extends StatelessWidget {
                   ),
                   SizedBox(width: 20),
                   Text(
-                    '\$review reviews',
+                    '0 reviews',
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       color: Colors.grey[500],

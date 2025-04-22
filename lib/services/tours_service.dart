@@ -13,7 +13,7 @@ class ToursService {
     } else {
       throw Exception('Failed to load tours');
     }
-  }
+  } 
 
   Future<Map<String, dynamic>> getTourDetails(String id) async {
     final response = await http.get(Uri.parse('$baseUrl/tours/$id'));

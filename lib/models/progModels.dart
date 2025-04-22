@@ -1,9 +1,11 @@
-class progModels {
+import 'tour.dart';
+
+class ProgModels {
   String title;
   String place;
   num distance;
   num review;
-  String Picture;
+  String picture;
   List<String> images;
   String description;
   //pour le guide
@@ -14,12 +16,12 @@ class progModels {
   num avis ;
 
 
-  progModels(
+  ProgModels(
       this.title,
       this.place,
       this.distance,
       this.review,
-      this.Picture,
+      this.picture,
       this.images,
       this.description,
       this.nom,
@@ -30,9 +32,23 @@ class progModels {
 
       );
 
-  static List<progModels> Progs() {
+  Tour toTour() {
+    return Tour(
+      id: 0,
+      wpPostId: 0,
+      title: title,
+      description: description,
+      locationPoint: place,
+      duration: distance.toInt(),
+      price: '',
+      postTitle: title,
+      postContent: description,
+    );
+  }
+
+  static List<ProgModels> progs() {
     return [
-      progModels(
+      ProgModels(
         'Djabel Sarj',
         'Seliana',
          2,
@@ -53,7 +69,7 @@ class progModels {
           5,
 
       ),
-      progModels(
+      ProgModels(
          'Aïn Draham',
         'Jendouba',
          23,
@@ -74,7 +90,7 @@ class progModels {
           3,
 
 
-      ),progModels(
+      ),ProgModels(
         'Ichkeul National Park',
         'Bizerte',
          8,
@@ -94,7 +110,7 @@ class progModels {
         'Allemand , arabic',
           4,
 
-      ),progModels(
+      ),ProgModels(
         'Hammam Zouakra',
         'Seliana',
          2,

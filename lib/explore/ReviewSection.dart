@@ -1,11 +1,10 @@
-
 import 'package:ecotrack/explore/selectGuide.dart';
 import 'package:flutter/material.dart';
-import '../models/progModels.dart';
+import '../models/tour.dart';
 
 class ReviewSection extends StatelessWidget {
-  final progModels Progs;
-  const ReviewSection(this.Progs, {super.key});
+  final Tour tour;
+  const ReviewSection(this.tour, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +36,7 @@ class ReviewSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                Progs.review.toString(),
+                '0', // Tour does not have review field, so default to 0 or adjust as needed
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 48,
@@ -75,7 +74,7 @@ class ReviewSection extends StatelessWidget {
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    '${Progs.review.toString()} avis',
+                    '0 avis', // No review field in Tour, so default text
                     style: const TextStyle(
                       color: Colors.grey,
                     ),

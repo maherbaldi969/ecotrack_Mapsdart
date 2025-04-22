@@ -7,7 +7,7 @@ import 'guideDetails.dart';
 class SelectGuidePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    List<progModels> guides = progModels.Progs();
+    List<ProgModels> guides = ProgModels.progs();
 
     return Scaffold(
       appBar: AppBar(
@@ -33,7 +33,7 @@ class SelectGuidePage extends StatelessWidget {
                 children: [
                   InkWell(
                     onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => GuideReviewsPage(guide)),
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => GuideReviewsPage(guide.toTour())),
                       );
                     },
                     child: Image.asset(

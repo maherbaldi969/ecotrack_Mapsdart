@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import '../models/progModels.dart';
+import '../models/tour.dart';
 
 class GallerySection extends StatelessWidget {
-  final progModels Progs;
-  const GallerySection(this.Progs, {super.key});
+  final Tour tour;
+  const GallerySection(this.tour, {super.key});
 
   @override
   Widget build(BuildContext context) {
+    final images = <String>[]; // TODO: Extract images from tour.postContent or other fields if available
+
     return Container(
       height: 200,
       padding: const EdgeInsets.symmetric(vertical: 20),
@@ -17,14 +19,19 @@ class GallerySection extends StatelessWidget {
           width: 250,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(15),
-            child: Image.asset(
-              Progs.images[index],
-              fit: BoxFit.cover,
-            ),
+            child: images.isNotEmpty
+                ? Image.asset(
+                    images[index],
+                    fit: BoxFit.cover,
+                  )
+                : Container(
+                    color: Colors.grey[300],
+                    child: Center(child: Text('No images')),
+                  ),
           ),
         ),
         separatorBuilder: (context, index) => const SizedBox(width: 15),
-        itemCount: Progs.images.length,
+        itemCount: images.length,
       ),
     );
   }

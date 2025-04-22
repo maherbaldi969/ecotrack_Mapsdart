@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../models/progModels.dart';
+import '../models/tour.dart';
 import '../navigationetsuivi/Maps.dart';
 
 class DetailSliverDelegate extends SliverPersistentHeaderDelegate {
-  final progModels Progs;
+  final Tour Progs;
   final double expandedHeight;
   final double roundedContainerHeight;
 
@@ -20,7 +20,8 @@ class DetailSliverDelegate extends SliverPersistentHeaderDelegate {
         Hero(
           tag: Progs.title,
           child: Image.asset(
-            Progs.Picture,
+            // Use first image from Tour or a placeholder
+            Progs.postContent.isNotEmpty ? Progs.postContent : 'assets/images/prog1.jpg',
             width: MediaQuery.of(context).size.width,
             height: expandedHeight,
             fit: BoxFit.cover,
