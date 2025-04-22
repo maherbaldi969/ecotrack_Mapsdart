@@ -135,7 +135,7 @@ class _ExploreState extends State<Explore> {
                                     )
                                   ],
                                 )
-                              ], 
+                              ],
                             ),
                           ),
                           _tours.isEmpty
@@ -257,40 +257,40 @@ class SearchSection extends StatelessWidget {
 }
 
 class ProgCard extends StatelessWidget {
-  final Tour progData;
+  final Tour tour;
   final String imagePath;
 
-  const ProgCard(this.progData, {required this.imagePath, Key? key}) : super(key: key);
+  const ProgCard(this.tour, {required this.imagePath, Key? key})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final title = progData.title;
-    final place = progData.locationPoint;
+    final title = tour.title;
+    final place = tour.locationPoint;
 
     return GestureDetector(
-        onTap: () {
-          try {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => Details(Progs: progData),
-              ),
-            );
-          } catch (e) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("Erreur: impossible d'ouvrir les détails")),
-            );
-          }
-        },
+      onTap: () {
+        try {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => Details(Progs: tour),
+            ),
+          );
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Erreur: impossible d'ouvrir les détails")),
+          );
+        }
+      },
       child: Container(
         margin: EdgeInsets.all(10),
-        height: 230,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.all(
             Radius.circular(18),
           ),
-          boxShadow: [ 
+          boxShadow: [
             BoxShadow(
               color: Colors.grey,
               spreadRadius: 4,
@@ -299,111 +299,111 @@ class ProgCard extends StatelessWidget {
             ),
           ],
         ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            height: 140,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(18),
-                topRight: Radius.circular(18),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              height: 140,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(18),
+                  topRight: Radius.circular(18),
+                ),
+                color: Colors.grey[200],
               ),
-              color: Colors.grey[200],
-            ),
-            child: Image.asset(
-              imagePath,
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: double.infinity,
-            ),
-          ),
-          Container(
-            margin: EdgeInsets.fromLTRB(10, 10, 10, 0),
-            child: Text(
-              title,
-              style: GoogleFonts.poppins(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: Colors.black,
+              child: Image.asset(
+                imagePath,
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
               ),
             ),
-          ),
-          Container(
-            margin: EdgeInsets.symmetric(horizontal: 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  place,
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    color: Colors.black,
-                    fontWeight: FontWeight.w400,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+            Container(
+              margin: EdgeInsets.fromLTRB(10, 10, 10, 0),
+              child: Text(
+                title,
+                style: GoogleFonts.poppins(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.black,
                 ),
-                const SizedBox(height: 4),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.schedule, color: vert, size: 16.0),
-                    SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
-                        'Durée: \${progData.duration} h',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          color: Colors.grey[500],
-                          fontWeight: FontWeight.w400,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Icon(Icons.price_check, color: vert, size: 16.0),
-                    SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
-                        '\${progData.price} TND',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          color: Colors.grey[500],
-                          fontWeight: FontWeight.w400,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+              ),
             ),
-          ),
-          Container(
-            margin: EdgeInsets.fromLTRB(10, 3, 10, 0),
-            child: Row(
-              children: [
-                Row(
-                  children: List.generate(4, (index) {
-                    return Icon(Icons.star_rate, color: vert, size: 14);
-                  })
-                    ..add(Icon(Icons.star_border, color: vert, size: 14)),
-                ),
-                SizedBox(width: 20),
-                Text(
-                  '0 reviews',
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    color: Colors.grey[500],
-                    fontWeight: FontWeight.w400,
+            Container(
+              margin: EdgeInsets.symmetric(horizontal: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    place,
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      color: Colors.black,
+                      fontWeight: FontWeight.w400,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-              ],
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      Icon(Icons.schedule, color: vert, size: 16.0),
+                      SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          'Durée: ${tour.duration.toString()} h',
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            color: Colors.grey[500],
+                            fontWeight: FontWeight.w400,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Icon(Icons.price_check, color: vert, size: 16.0),
+                      SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          '${tour.price.toString()} TND',
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            color: Colors.grey[500],
+                            fontWeight: FontWeight.w400,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          )
-        ],
-      ),
+            Container(
+              margin: EdgeInsets.fromLTRB(10, 3, 10, 0),
+              child: Row(
+                children: [
+                  Row(
+                    children: List.generate(4, (index) {
+                      return Icon(Icons.star_rate, color: vert, size: 14);
+                    })
+                      ..add(Icon(Icons.star_border, color: vert, size: 14)),
+                  ),
+                  SizedBox(width: 20),
+                  Text(
+                    '0 reviews',
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      color: Colors.grey[500],
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
-} 
+}

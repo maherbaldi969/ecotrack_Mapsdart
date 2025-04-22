@@ -31,7 +31,7 @@ class _DetailsState extends State<Details> {
     setState(() {
       isLoading = true;
       errorMessage = null;
-    });
+    }); 
     try {
       final tourMap =
           await toursService.getTourDetails(widget.Progs.id.toString());
