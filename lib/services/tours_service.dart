@@ -34,6 +34,16 @@ class ToursService {
     }
   }
 
+  Future<List<dynamic>> getTourReviews(String id) async {
+    final response = await http.get(Uri.parse('$baseUrl/tours/$id/reviews'));
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> responseMap = jsonDecode(response.body);
+      return responseMap['data'] as List<dynamic>;
+    } else {
+      throw Exception('Failed to load tour reviews');
+    }
+  }
+
   Future<List<dynamic>> filterTours(
       {String? langue, int? duree, int? prix}) async {
     final queryParameters = <String, String>{};
@@ -45,7 +55,8 @@ class ToursService {
         .replace(queryParameters: queryParameters);
     final response = await http.get(uri);
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      final Map<String, dynamic> responseMap = jsonDecode(response.body);
+      return responseMap['data'] as List<dynamic>;
     } else {
       throw Exception('Failed to filter tours');
     }

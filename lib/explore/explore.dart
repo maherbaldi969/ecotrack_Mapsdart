@@ -135,7 +135,7 @@ class _ExploreState extends State<Explore> {
                                     )
                                   ],
                                 )
-                              ],
+                              ], 
                             ),
                           ),
                           _tours.isEmpty

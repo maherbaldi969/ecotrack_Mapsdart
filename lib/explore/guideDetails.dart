@@ -18,6 +18,9 @@ class _GuideReviewsPageState extends State<GuideReviewsPage> {
   bool isLoading = true;
   String? errorMessage;
   List<dynamic> guides = [];
+  List<dynamic> reviews = [];
+  bool isLoadingReviews = false;
+  String? reviewsErrorMessage;
 
   final ToursService toursService = ToursService();
 
@@ -39,7 +42,8 @@ class _GuideReviewsPageState extends State<GuideReviewsPage> {
       errorMessage = null;
     });
     try {
-      final fetchedGuides = await toursService.getTourGuides(widget.tour.id.toString());
+      final fetchedGuides =
+          await toursService.getTourGuides(widget.tour.id.toString());
       if (!_isMounted) return;
       setState(() {
         guides = fetchedGuides;
@@ -52,64 +56,32 @@ class _GuideReviewsPageState extends State<GuideReviewsPage> {
         isLoading = false;
       });
     }
-  } 
+  }
 
   Future<void> downloadReviews() async {
+    setState(() {
+      isLoadingReviews = true;
+      reviewsErrorMessage = null;
+    });
     try {
-      String csv = 'Voyageur,Date,Note,Commentaire\n';
-      for (int i = 0; i < 5; i++) {
-        csv += 'Voyageur \${i + 1},2024-10-01,4,Super guide ! Très professionnel et connaît bien la région.\n';
-      }
-      final dir = await getApplicationDocumentsDirectory();
-      final file = File('\${dir.path}/reviews_\${widget.tour.title}.csv');
-      await file.writeAsString(csv);
+      final fetchedReviews =
+          await toursService.getTourReviews(widget.tour.id.toString());
       if (!_isMounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Avis téléchargés: \${file.path}')),
-      );
+      setState(() {
+        reviews = fetchedReviews;
+        isLoadingReviews = false;
+      });
     } catch (e) {
       if (!_isMounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur lors du téléchargement des avis')),
-      );
+      setState(() {
+        reviewsErrorMessage = "Erreur lors du chargement des avis.";
+        isLoadingReviews = false;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) {
-      return Scaffold(
-        backgroundColor: Colors.white,
-        appBar: AppBar(
-          backgroundColor: const Color(0xFF80C000),
-          foregroundColor: Colors.white,
-          title: Text('Guides associés',
-              style: GoogleFonts.merriweather(color: Colors.white)),
-          centerTitle: false,
-        ),
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    if (errorMessage != null) {
-      return Scaffold(
-        backgroundColor: Colors.white,
-        appBar: AppBar(
-          backgroundColor: const Color(0xFF80C000),
-          foregroundColor: Colors.white,
-          title: Text('Guides associés',
-              style: GoogleFonts.merriweather(color: Colors.white)),
-          centerTitle: false,
-        ),
-        body: Center(
-          child: Text(
-            errorMessage!,
-            style: GoogleFonts.merriweather(color: Color(0xFF80C000)),
-          ),
-        ),
-      );
-    }
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -119,58 +91,232 @@ class _GuideReviewsPageState extends State<GuideReviewsPage> {
             style: GoogleFonts.merriweather(color: Colors.white)),
         centerTitle: false,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Expanded(
-              child: ListView.separated(
-                itemCount: guides.length,
-                separatorBuilder: (context, index) => Divider(),
-                itemBuilder: (context, index) {
-                  final guide = guides[index];
-                  return ListTile(
-                    title: Text(
-                      guide['display_name'] ?? 'Nom inconnu',
-                      style: GoogleFonts.merriweather(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Langue(s) parlée(s): ${guide['meta']?['langue'] ?? 'N/A'}',
-                            style: GoogleFonts.poppins()),
-                        Text('Expérience: ${guide['meta']?['experience'] ?? 'N/A'} ans',
-                            style: GoogleFonts.poppins()),
-                      ],
-                    ),
-                    onTap: () {
-                      // Optional: Implement onTap to show guide details or reviews
-                    },
-                  );
-                },
-              ),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF80C000),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-              onPressed: downloadReviews,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.download, color: Colors.white),
-                  const SizedBox(width: 8),
-                  Text('Télécharger les avis',
-                      style: GoogleFonts.merriweather(fontSize: 16, color: Colors.white)),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : errorMessage != null
+              ? Center(
+                  child: Text(
+                    errorMessage!,
+                    style: GoogleFonts.merriweather(color: Color(0xFF80C000)),
+                  ),
+                )
+              : Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: ListView.separated(
+                          itemCount: guides.length,
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(height: 16),
+                          itemBuilder: (context, index) {
+                            final guide = guides[index];
+                            return Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  )
+                                ],
+                                border: Border.all(
+                                  color: const Color(0xFF80C000),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    guide['display_name'] ?? 'Nom inconnu',
+                                    style: GoogleFonts.merriweather(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Langue(s) parlée(s): ${guide['meta']?['langue'] ?? 'N/A'}',
+                                    style: GoogleFonts.poppins(
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Expérience: ${guide['meta']?['experience'] ?? 'N/A'} ans',
+                                    style: GoogleFonts.poppins(
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  if (reviews.isNotEmpty)
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Avis:',
+                                          style: GoogleFonts.merriweather(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: const Color(0xFF80C000),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        ...reviews
+                                            .where((review) =>
+                                                review['comment_author'] ==
+                                                guide['display_name'])
+                                            .map((review) => Container(
+                                                  margin: const EdgeInsets.only(
+                                                      bottom: 8),
+                                                  padding:
+                                                      const EdgeInsets.all(8),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.grey[100],
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            8),
+                                                    border: Border.all(
+                                                        color: Colors
+                                                            .grey.shade300),
+                                                  ),
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        review['comment_content'] ??
+                                                            '',
+                                                        style:
+                                                            GoogleFonts.poppins(
+                                                          color: Colors.black87,
+                                                        ),
+                                                      ),
+                                                      if (review[
+                                                              'comment_date'] !=
+                                                          null)
+                                                        Text(
+                                                          review[
+                                                              'comment_date'],
+                                                          style: GoogleFonts
+                                                              .poppins(
+                                                            color:
+                                                                Colors.black54,
+                                                            fontStyle: FontStyle
+                                                                .italic,
+                                                          ),
+                                                        ),
+                                                    ],
+                                                  ),
+                                                ))
+                                            .toList(),
+                                      ],
+                                    ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      if (isLoadingReviews)
+                        const Center(child: CircularProgressIndicator()),
+                      if (reviewsErrorMessage != null)
+                        Center(
+                          child: Text(
+                            reviewsErrorMessage!,
+                            style: GoogleFonts.merriweather(
+                              color: const Color(0xFF80C000),
+                            ),
+                          ),
+                        ),
+                      if (reviews.isNotEmpty)
+                        Container(
+                          height: 300,
+                          child: ListView.separated(
+                            itemCount: reviews.length,
+                            separatorBuilder: (context, index) =>
+                                const SizedBox(height: 16),
+                            itemBuilder: (context, index) {
+                              final review = reviews[index];
+                              return Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.05),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    )
+                                  ],
+                                  border: Border.all(
+                                    color: const Color(0xFF80C000),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      review['comment_author'] ??
+                                          'Auteur inconnu',
+                                      style: GoogleFonts.merriweather(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      review['comment_content'] ?? '',
+                                      style: GoogleFonts.poppins(
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                    if (review['comment_date'] != null)
+                                      Text(
+                                        review['comment_date'],
+                                        style: GoogleFonts.poppins(
+                                          color: Colors.black54,
+                                          fontStyle: FontStyle.italic,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      const SizedBox(height: 24),
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF80C000),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 14, horizontal: 24),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        onPressed: downloadReviews,
+                        icon: const Icon(Icons.download, color: Colors.white),
+                        label: Text(
+                          'Afficher les avis',
+                          style: GoogleFonts.merriweather(
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
     );
   }
 }
-
