@@ -52,7 +52,7 @@ class _GuideReviewsPageState extends State<GuideReviewsPage> {
         isLoading = false;
       });
     }
-  }
+  } 
 
   Future<void> downloadReviews() async {
     try {
@@ -131,15 +131,15 @@ class _GuideReviewsPageState extends State<GuideReviewsPage> {
                   final guide = guides[index];
                   return ListTile(
                     title: Text(
-                      guide['name'] ?? 'Nom inconnu',
+                      guide['display_name'] ?? 'Nom inconnu',
                       style: GoogleFonts.merriweather(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Langue(s) parlée(s): ${guide['languages'] ?? 'N/A'}',
+                        Text('Langue(s) parlée(s): ${guide['meta']?['langue'] ?? 'N/A'}',
                             style: GoogleFonts.poppins()),
-                        Text('Expérience: ${guide['experience_years'] ?? 'N/A'} ans',
+                        Text('Expérience: ${guide['meta']?['experience'] ?? 'N/A'} ans',
                             style: GoogleFonts.poppins()),
                       ],
                     ),
@@ -173,4 +173,4 @@ class _GuideReviewsPageState extends State<GuideReviewsPage> {
     );
   }
 }
-</create_file>
+

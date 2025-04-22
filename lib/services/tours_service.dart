@@ -27,7 +27,8 @@ class ToursService {
   Future<List<dynamic>> getTourGuides(String id) async {
     final response = await http.get(Uri.parse('$baseUrl/tours/$id/guides'));
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      final Map<String, dynamic> responseMap = jsonDecode(response.body);
+      return responseMap['data'] as List<dynamic>;
     } else {
       throw Exception('Failed to load tour guides');
     }
