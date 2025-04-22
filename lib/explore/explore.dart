@@ -3,24 +3,160 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'filtrer.dart';
 import '../models/progModels.dart';
+import '../services/tours_service.dart';
 
 const vert = Color(0xFF80C000);
 const gris = Color(0xFF8B8787);
 
-class Explore extends StatelessWidget {
+class Explore extends StatefulWidget {
+  @override
+  _ExploreState createState() => _ExploreState();
+}
+
+class _ExploreState extends State<Explore> {
+  bool _isLoading = false;
+  String? _errorMessage;
+  List<dynamic> _tours = [];
+
+  final ToursService toursService = ToursService();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTours();
+  }
+
+  Future<void> _loadTours() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    try {
+      final tours = await toursService.getAllTours();
+      print('Fetched tours: \$tours');
+      setState(() {
+        _tours = tours;
+      });
+    } catch (e) {
+      print('Error loading tours: $e');
+      setState(() {
+        _errorMessage = "Erreur lors du chargement des tours. Veuillez vérifier votre connexion internet et réessayer.";
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _openFilterDialog() async {
+    final result = await showGeneralDialog(
+      barrierDismissible: true,
+      barrierLabel: "Filtrer",
+      context: context,
+      pageBuilder: (context, _, __) => Dialog(
+        insetPadding: EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(40),
+        ),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.8,
+          ),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: FilterModal(),
+            ),
+          ),
+        ),
+      ),
+    );
+    if (result != null && result is List<dynamic>) {
+      setState(() {
+        _tours = result;
+      });
+    } else {
+      _loadTours();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: MyAppBar(),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            SearchSection(),
-            ProgSection(),
-          ],
-        ),
-      ),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : _errorMessage != null
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      _errorMessage!,
+                      style: TextStyle(color: Colors.red, fontSize: 16),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                )
+              : ListView(
+                  padding: EdgeInsets.zero,
+                  children: [
+                    SearchSection(),
+                    Container(
+                      padding: EdgeInsets.all(10),
+                      color: Colors.white,
+                      child: Column(
+                        children: [
+                          Container(
+                            height: 50,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('${_tours.length} Tours',
+                                    style: GoogleFonts.poppins(
+                                        color: Color(0xFF80C000), fontSize: 15)),
+                                Row(
+                                  children: [
+                                    Text('Filtrer ',
+                                        style: GoogleFonts.poppins(
+                                            color: Color(0xFF80C000), fontSize: 15)),
+                                    IconButton(
+                                      onPressed: _openFilterDialog,
+                                      icon: Icon(
+                                        Icons.filter_list_outlined,
+                                        color: vert,
+                                        size: 25,
+                                      ),
+                                    )
+                                  ],
+                                )
+                              ],
+                            ),
+                          ),
+                          _tours.isEmpty
+                              ? Padding(
+                                  padding: const EdgeInsets.all(20.0),
+                                  child: Text(
+                                    'Aucun résultat',
+                                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                )
+                              : ListView.builder(
+                                  shrinkWrap: true,
+                                  physics: NeverScrollableScrollPhysics(),
+                                  itemCount: _tours.length,
+                                  itemBuilder: (context, index) {
+                                    final tour = _tours[index];
+                                    return ProgCard.fromMap(tour);
+                                  },
+                                ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
     );
   }
 }
@@ -113,83 +249,22 @@ class SearchSection extends StatelessWidget {
   }
 }
 
-class ProgSection extends StatelessWidget {
-  final List<progModels> progs = progModels.Progs().take(20).toList();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(10),
-      color: Colors.white,
-      child: Column(
-        children: [
-          Container(
-            height: 50,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('${progs.length} Programmes',
-                    style: GoogleFonts.poppins(
-                        color: Color(0xFF80C000), fontSize: 15)),
-                Row(
-                  children: [
-                    Text('Filtrer ',
-                        style: GoogleFonts.poppins(
-                            color: Color(0xFF80C000), fontSize: 15)),
-                    IconButton(
-                      onPressed: () {
-                        showGeneralDialog(
-                          barrierDismissible: true,
-                          barrierLabel: "Filtrer",
-                          context: context,
-                          pageBuilder: (context, _, __) => Dialog(
-                            insetPadding: EdgeInsets.all(16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(40),
-                            ),
-                            child: ConstrainedBox(
-                              constraints: BoxConstraints(
-                                maxHeight:
-                                    MediaQuery.of(context).size.height * 0.8,
-                              ),
-                              child: SingleChildScrollView(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(16.0),
-                                  child: FilterModal(),
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                      icon: Icon(
-                        Icons.filter_list_outlined,
-                        color: vert,
-                        size: 25,
-                      ),
-                    )
-                  ],
-                )
-              ],
-            ),
-          ),
-          Column(
-            children: progs.map((Progs) {
-              return ProgCard(Progs);
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class ProgCard extends StatelessWidget {
-  final progModels progData;
+  final dynamic progData;
   ProgCard(this.progData);
 
+  factory ProgCard.fromMap(Map<String, dynamic> map) {
+    return ProgCard(map);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final title = progData['title'] ?? '';
+    final place = progData['place'] ?? '';
+    final distance = progData['distance'] ?? 0;
+    final review = progData['review'] ?? 0;
+    final picture = progData['picture'];
+
     return GestureDetector(
       onTap: () {
         try {
@@ -235,11 +310,11 @@ class ProgCard extends StatelessWidget {
                 ),
                 color: Colors.grey[200],
               ),
-              child: progData.Picture != null
+              child: picture != null
                   ? Stack(
                       children: <Widget>[
-                        Image.asset(
-                          progData.Picture,
+                        Image.network(
+                          picture,
                           fit: BoxFit.cover,
                           width: double.infinity,
                           height: double.infinity,
@@ -267,7 +342,7 @@ class ProgCard extends StatelessWidget {
             Container(
               margin: EdgeInsets.fromLTRB(10, 10, 10, 0),
               child: Text(
-                progData.title,
+                title,
                 style: GoogleFonts.poppins(
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
@@ -281,7 +356,7 @@ class ProgCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    progData.place,
+                    place,
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       color: Colors.black,
@@ -292,7 +367,7 @@ class ProgCard extends StatelessWidget {
                     children: [
                       Icon(Icons.place, color: vert, size: 16.0),
                       Text(
-                        '${progData.distance} km to city',
+                        '\$distance km to city',
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           color: Colors.grey[500],
@@ -316,7 +391,7 @@ class ProgCard extends StatelessWidget {
                   ),
                   SizedBox(width: 20),
                   Text(
-                    '${progData.review} reviews',
+                    '\$review reviews',
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       color: Colors.grey[500],

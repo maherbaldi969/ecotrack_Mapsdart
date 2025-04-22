@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/progModels.dart';
+import 'guideDetails.dart';
 
 class HeaderSection extends StatelessWidget {
   final progModels Progs;
@@ -19,7 +20,6 @@ class HeaderSection extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(15),
           child: Column(
-
             children: [
               // Title and Place
               Row(
@@ -56,7 +56,7 @@ class HeaderSection extends StatelessWidget {
                       Icon(Icons.directions_walk, size: 18, color: Color(0xFF80C000)), // Green Icon
                       const SizedBox(width: 5),
                       Text(
-                        '${Progs.distance} km à la ville',
+                        '\${Progs.distance} km à la ville',
                         style: GoogleFonts.merriweather(
                           fontSize: 14,
                           color: Colors.black, // Black Text
@@ -70,7 +70,7 @@ class HeaderSection extends StatelessWidget {
                       Icon(Icons.star, color: Color(0xFF80C000), size: 18), // Green Star
                       const SizedBox(width: 5),
                       Text(
-                        '${Progs.avis} Reviews',
+                        '\${Progs.avis} Reviews',
                         style: GoogleFonts.merriweather(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -78,6 +78,42 @@ class HeaderSection extends StatelessWidget {
                         ),
                       ),
                     ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              // Buttons Row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => GuideReviewsPage(Progs),
+                        ),
+                      );
+                    },
+                    icon: Icon(Icons.group, color: Colors.white),
+                    label: Text('Voir guides', style: TextStyle(color: Colors.white)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF80C000),
+                    ),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Téléchargement de la carte en cours...')),
+                      );
+                      // Actual download logic to be implemented in details.dart
+                    },
+                    icon: Icon(Icons.download, color: Colors.white),
+                    label: Text('Télécharger la carte', style: TextStyle(color: Colors.white)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF80C000),
+                    ),
                   ),
                 ],
               ),

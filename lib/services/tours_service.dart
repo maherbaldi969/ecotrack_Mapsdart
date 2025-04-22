@@ -1,20 +1,22 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../config/api_config.dart';
 
 class ToursService {
-  final String baseUrl = 'http://192.168.112.51:3000';
+  final String baseUrl = ApiConfig.baseUrl;
 
   Future<List<dynamic>> getAllTours() async {
-    final response = await http.get(Uri.parse('\$baseUrl/tours/'));
+    final response = await http.get(Uri.parse('$baseUrl/tours/'));
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      final Map<String, dynamic> responseMap = jsonDecode(response.body);
+      return responseMap['data'] as List<dynamic>;
     } else {
       throw Exception('Failed to load tours');
     }
   }
 
   Future<Map<String, dynamic>> getTourDetails(String id) async {
-    final response = await http.get(Uri.parse('\$baseUrl/tours/\$id'));
+    final response = await http.get(Uri.parse('$baseUrl/tours/$id'));
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
@@ -23,7 +25,7 @@ class ToursService {
   }
 
   Future<List<dynamic>> getTourGuides(String id) async {
-    final response = await http.get(Uri.parse('\$baseUrl/tours/\$id/guides'));
+    final response = await http.get(Uri.parse('$baseUrl/tours/$id/guides'));
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
@@ -38,7 +40,7 @@ class ToursService {
     if (duree != null) queryParameters['duree'] = duree.toString();
     if (prix != null) queryParameters['prix'] = prix.toString();
 
-    final uri = Uri.parse('\$baseUrl/tours/filter')
+    final uri = Uri.parse('$baseUrl/tours/filter')
         .replace(queryParameters: queryParameters);
     final response = await http.get(uri);
     if (response.statusCode == 200) {
@@ -49,7 +51,7 @@ class ToursService {
   }
 
   Future<List<int>> downloadTourMap(String id) async {
-    final response = await http.get(Uri.parse('\$baseUrl/tours/\$id/map'));
+    final response = await http.get(Uri.parse('$baseUrl/tours/$id/map'));
     if (response.statusCode == 200) {
       return response.bodyBytes;
     } else {
